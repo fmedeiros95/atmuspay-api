@@ -1,0 +1,453 @@
+{
+	"list": [{
+		"ispb": "00000000",
+		"code": "001",
+		"name": "Banco do Brasil S.A.",
+		"short_name": "BCO DO BRASIL S.A."
+	}, {
+		"ispb": "00000208",
+		"code": "070",
+		"name": "Banco de Brasília S.A.",
+		"short_name": "BRB - BCO DE BRASILIA S.A."
+	}, {
+		"ispb": "00360305",
+		"code": "104",
+		"name": "Caixa Econômica Federal",
+		"short_name": "CAIXA ECONOMICA FEDERAL"
+	}, {
+		"ispb": "00416968",
+		"code": "077",
+		"name": "Banco Inter S.A.",
+		"short_name": "BANCO INTER"
+	}, {
+		"ispb": "00795423",
+		"code": "743",
+		"name": "Banco Semear S.A.",
+		"short_name": "BANCO SEMEAR"
+	}, {
+		"ispb": "01181521",
+		"code": "748",
+		"name": "Banco Cooperativo Sicredi S. A.",
+		"short_name": "BCO COOPERATIVO SICREDI S.A."
+	}, {
+		"ispb": "01634601",
+		"code": "091",
+		"name": "Central de Cooperativas de Economia e Crédito Mútuo do Est RS - Unicred",
+		"short_name": "CCCM UNICRED CENTRAL RS"
+	}, {
+		"ispb": "02038232",
+		"code": "756",
+		"name": "Banco Cooperativo do Brasil S/A - Bancoob",
+		"short_name": "BANCOOB"
+	}, {
+		"ispb": "03323840",
+		"code": "025",
+		"name": "Banco Alfa S.A.",
+		"short_name": "BCO ALFA S.A."
+	}, {
+		"ispb": "03532415",
+		"code": "075",
+		"name": "Banco ABN Amro S.A.",
+		"short_name": "BCO ABN AMRO S.A."
+	}, {
+		"ispb": "04866275",
+		"code": "012",
+		"name": "Banco Inbursa S.A.",
+		"short_name": "BANCO INBURSA"
+	}, {
+		"ispb": "04902979",
+		"code": "003",
+		"name": "Banco da Amazônia S.A.",
+		"short_name": "BCO DA AMAZONIA S.A."
+	}, {
+		"ispb": "04913711",
+		"code": "037",
+		"name": "Banco do Estado do Pará S.A.",
+		"short_name": "BCO DO EST. DO PA S.A."
+	}, {
+		"ispb": "05463212",
+		"code": "085",
+		"name": "Cooperativa Central de Crédito - Ailos",
+		"short_name": "COOP CENTRAL AILOS"
+	}, {
+		"ispb": "05790149",
+		"code": "114",
+		"name": "Central Cooperativa de Crédito no Estado do Espírito Santo - CECOOP",
+		"short_name": "CENTRAL COOPERATIVA DE CRÉDITO NO ESTADO DO ESPÍRITO SANTO"
+	}, {
+		"ispb": "07237373",
+		"code": "004",
+		"name": "Banco do Nordeste do Brasil S.A.",
+		"short_name": "BCO DO NORDESTE DO BRASIL S.A."
+	}, {
+		"ispb": "07679404",
+		"code": "082",
+		"name": "Banco Topazio S.A.",
+		"short_name": "BANCO TOPÁZIO S.A."
+	}, {
+		"ispb": "08561701",
+		"code": "290",
+		"name": "Pagseguro Internet S.A.",
+		"short_name": "PAGSEGURO"
+	}, {
+		"ispb": "09516419",
+		"code": "079",
+		"name": "Banco Original do Agronegócio S.A.",
+		"short_name": "BCO ORIGINAL DO AGRO S/A"
+	}, {
+		"ispb": "10664513",
+		"code": "121",
+		"name": "Banco Agibank S.A.",
+		"short_name": "BCO AGIBANK S.A."
+	}, {
+		"ispb": "13370835",
+		"code": "301",
+		"name": "BPP Instituição de Pagamento S.A.",
+		"short_name": "BPP IP S.A."
+	}, {
+		"ispb": "14388334",
+		"code": "254",
+		"name": "Parana Banco S. A.",
+		"short_name": "PARANA BCO S.A."
+	}, {
+		"ispb": "14511781",
+		"code": "268",
+		"name": "Barigui Companhia Hipotecária",
+		"short_name": "BARIGUI CH"
+	}, {
+		"ispb": "15114366",
+		"code": "107",
+		"name": "Banco Bocom BBM S.A.",
+		"short_name": "BCO BOCOM BBM S.A."
+	}, {
+		"ispb": "15173776",
+		"code": "412",
+		"name": "Banco Capital S. A.",
+		"short_name": "BCO CAPITAL S.A."
+	}, {
+		"ispb": "16501555",
+		"code": "197",
+		"name": "Stone Pagamentos S.A.",
+		"short_name": "STONE PAGAMENTOS S.A."
+	}, {
+		"ispb": "16944141",
+		"code": "142",
+		"name": "Broker Brasil Corretora de Câmbio Ltda.",
+		"short_name": "BROKER BRASIL CC LTDA."
+	}, {
+		"ispb": "17184037",
+		"code": "389",
+		"name": "Banco Mercantil do Brasil S.A.",
+		"short_name": "BCO MERCANTIL DO BRASIL S.A."
+	}, {
+		"ispb": "17351180",
+		"code": "634",
+		"name": "Banco Triângulo S.A.",
+		"short_name": "BCO TRIANGULO S.A."
+	}, {
+		"ispb": "18236120",
+		"code": "260",
+		"name": "Nu Pagamentos S.A.",
+		"short_name": "NU PAGAMENTOS S.A."
+	}, {
+		"ispb": "23862762",
+		"code": "280",
+		"name": "Avista S.A. Crédito, Financiamento e Investimento",
+		"short_name": "AVISTA S.A. CFI"
+	}, {
+		"ispb": "24074692",
+		"code": "146",
+		"name": "Guitta Corretora de Câmbio Ltda.",
+		"short_name": "GUITTA CC LTDA"
+	}, {
+		"ispb": "27842177",
+		"code": "271",
+		"name": "IB Corretora de Câmbio, Títulos e Valores Mobiliários Ltda.",
+		"short_name": "IB CCTVM LTDA"
+	}, {
+		"ispb": "28127603",
+		"code": "021",
+		"name": "Banestes S.A. Banco do Estado do Espírito Santo",
+		"short_name": "BCO BANESTES S.A."
+	}, {
+		"ispb": "28195667",
+		"code": "246",
+		"name": "Banco ABC Brasil S.A.",
+		"short_name": "BCO ABC BRASIL S.A."
+	}, {
+		"ispb": "28650236",
+		"code": "292",
+		"name": "BS2 Distribuidora de Títulos e Valores Mobiliários S.A. ",
+		"short_name": "BS2 DTVM S.A."
+	}, {
+		"ispb": "30723886",
+		"code": "746",
+		"name": "Banco Modal S.A.",
+		"short_name": "BCO MODAL S.A."
+	}, {
+		"ispb": "33042953",
+		"code": "477",
+		"name": "Citibank N.A. ",
+		"short_name": "CITIBANK N.A."
+	}, {
+		"ispb": "33479023",
+		"code": "745",
+		"name": "Banco Citibank S.A.",
+		"short_name": "BCO CITIBANK S.A."
+	}, {
+		"ispb": "33923798",
+		"code": "243",
+		"name": "Banco Máxima S.A.",
+		"short_name": "BCO MÁXIMA S.A."
+	}, {
+		"ispb": "58616418",
+		"code": "224",
+		"name": "Banco Fibra S.A.",
+		"short_name": "BCO FIBRA S.A."
+	}, {
+		"ispb": "59118133",
+		"code": "600",
+		"name": "Banco Luso Brasileiro S.A.",
+		"short_name": "BCO LUSO BRASILEIRO S.A."
+	}, {
+		"ispb": "59285411",
+		"code": "623",
+		"name": "Banco Pan S.A.",
+		"short_name": "BANCO PAN"
+	}, {
+		"ispb": "59438325",
+		"code": "204",
+		"name": "Banco Bradesco Cartões S.A.",
+		"short_name": "BCO BRADESCO CARTOES S.A."
+	}, {
+		"ispb": "59588111",
+		"code": "655",
+		"name": "Banco Votorantim S.A.",
+		"short_name": "BCO VOTORANTIM S.A."
+	}, {
+		"ispb": "60701190",
+		"code": "341",
+		"name": "Itaú Unibanco  S.A.",
+		"short_name": "ITAÚ UNIBANCO BM S.A."
+	}, {
+		"ispb": "60746948",
+		"code": "237",
+		"name": "Banco Bradesco S.A.",
+		"short_name": "BCO BRADESCO S.A."
+	}, {
+		"ispb": "60850229",
+		"code": "613",
+		"name": "Omni Banco S.A.",
+		"short_name": "OMNI BANCO S.A."
+	}, {
+		"ispb": "60872504",
+		"code": "652",
+		"name": "Itaú Unibanco Holding S.A.",
+		"short_name": "ITAÚ UNIBANCO HOLDING BM S.A."
+	}, {
+		"ispb": "60889128",
+		"code": "637",
+		"name": "Banco Sofisa S. A.",
+		"short_name": "BCO SOFISA S.A."
+	}, {
+		"ispb": "61024352",
+		"code": "653",
+		"name": "Banco Indusval S. A.",
+		"short_name": "BCO INDUSVAL S.A."
+	}, {
+		"ispb": "61033106",
+		"code": "069",
+		"name": "Banco Crefisa S.A.",
+		"short_name": "BCO CREFISA S.A."
+	}, {
+		"ispb": "61186680",
+		"code": "318",
+		"name": "Banco BMG S.A.",
+		"short_name": "BCO BMG S.A."
+	}, {
+		"ispb": "61348538",
+		"code": "626",
+		"name": "Banco Ficsa S. A.",
+		"short_name": "BCO FICSA S.A."
+	}, {
+		"ispb": "61444949",
+		"code": "270",
+		"name": "Sagitur Corretora de Câmbio Ltda.",
+		"short_name": "SAGITUR CC LTDA"
+	}, {
+		"ispb": "61723847",
+		"code": "113",
+		"name": "Magliano S.A. Corretora de Cambio e Valores Mobiliarios ",
+		"short_name": "MAGLIANO S.A. CCVM"
+	}, {
+		"ispb": "61809182",
+		"code": "011",
+		"name": "Credit Suisse Hedging-Griffo Corretora de Valores S.A.  ",
+		"short_name": "C.SUISSE HEDGING-GRIFFO CV S/A"
+	}, {
+		"ispb": "61820817",
+		"code": "611",
+		"name": "Banco Paulista S.A.",
+		"short_name": "BCO PAULISTA S.A."
+	}, {
+		"ispb": "62073200",
+		"code": "755",
+		"name": "Bank of America Merrill Lynch Banco Múltiplo S.A.",
+		"short_name": "BOFA MERRILL LYNCH BM S.A."
+	}, {
+		"ispb": "62109566",
+		"code": "089",
+		"name": "Cooperativa de Crédito Rural da Região da Mogiana",
+		"short_name": "CCR REG MOGIANA"
+	}, {
+		"ispb": "62144175",
+		"code": "643",
+		"name": "Banco Pine S.A.",
+		"short_name": "BCO PINE S.A."
+	}, {
+		"ispb": "62169875",
+		"code": "140",
+		"name": "Easynvest - Título Corretora de Valores SA",
+		"short_name": "EASYNVEST - TÍTULO CV SA"
+	}, {
+		"ispb": "62232889",
+		"code": "707",
+		"name": "Banco Daycoval S.A.",
+		"short_name": "BCO DAYCOVAL S.A"
+	}, {
+		"ispb": "62237649",
+		"code": "288",
+		"name": "Carol Distribuidora de Títulos e Valores Mobiliários Ltda.",
+		"short_name": "CAROL DTVM LTDA."
+	}, {
+		"ispb": "62287735",
+		"code": "101",
+		"name": "Renascença Distribuidora de Títulos e Valores Mobiliários Ltda.  ",
+		"short_name": "RENASCENCA DTVM LTDA"
+	}, {
+		"ispb": "62331228",
+		"code": "487",
+		"name": "Deutsche Bank S.A. - Banco Alemão",
+		"short_name": "DEUTSCHE BANK S.A.BCO ALEMAO"
+	}, {
+		"ispb": "62421979",
+		"code": "233",
+		"name": "Banco Cifra S.A.",
+		"short_name": "BANCO CIFRA"
+	}, {
+		"ispb": "65913436",
+		"code": "177",
+		"name": "Guide Investimentos S.A. Corretora de Valores  ",
+		"short_name": "GUIDE"
+	}, {
+		"ispb": "68900810",
+		"code": "633",
+		"name": "Banco Rendimento S.A.",
+		"short_name": "BCO RENDIMENTO S.A."
+	}, {
+		"ispb": "71027866",
+		"code": "218",
+		"name": "Banco BS2 S.A.",
+		"short_name": "BCO BS2 S.A."
+	}, {
+		"ispb": "71371686",
+		"code": "169",
+		"name": "Banco Olé Bonsucesso Consignado S.A.  ",
+		"short_name": "BCO OLÉ BONSUCESSO CONSIGNADO S.A."
+	}, {
+		"ispb": "71590442",
+		"code": "293",
+		"name": "Lastro RDV Distribuidora de Títulos e Valores Mobiliários Ltda.  ",
+		"short_name": "LASTRO RDV DTVM LTDA"
+	}, {
+		"ispb": "71677850",
+		"code": "285",
+		"name": "Frente Corretora de Câmbio Ltda.",
+		"short_name": "FRENTE CC LTDA."
+	}, {
+		"ispb": "73622748",
+		"code": "080",
+		"name": "BT Corretora de Câmbio Ltda.",
+		"short_name": "B&T CC LTDA."
+	}, {
+		"ispb": "74828799",
+		"code": "753",
+		"name": "Novo Banco Continental S.A. - Banco Múltiplo",
+		"short_name": "NOVO BCO CONTINENTAL S.A. - BM"
+	}, {
+		"ispb": "76461557",
+		"code": "281",
+		"name": "Cooperativa de Crédito Rural Coopavel ",
+		"short_name": "CCR COOPAVEL"
+	}, {
+		"ispb": "76543115",
+		"code": "754",
+		"name": "Banco Sistema S.A.",
+		"short_name": "BANCO SISTEMA"
+	}, {
+		"ispb": "78157146",
+		"code": "098",
+		"name": "Credialiança Cooperativa de Crédito Rural",
+		"short_name": "CREDIALIANÇA CCR"
+	}, {
+		"ispb": "78626983",
+		"code": "610",
+		"name": "Banco VR S.A. ",
+		"short_name": "BCO VR S.A."
+	}, {
+		"ispb": "78632767",
+		"code": "712",
+		"name": "Banco Ourinvest S.A.",
+		"short_name": "BCO OURINVEST S.A."
+	}, {
+		"ispb": "81723108",
+		"code": "010",
+		"name": "Credicoamo Crédito Rural Cooperativa  ",
+		"short_name": "CREDICOAMO"
+	}, {
+		"ispb": "89960090",
+		"code": "283",
+		"name": "RB Capital Investimentos Distribuidora de Títulos e Valores Mobiliários Ltda.",
+		"short_name": "RB CAPITAL INVESTIMENTOS DTVM LTDA."
+	}, {
+		"ispb": "90400888",
+		"code": "033",
+		"name": "Banco Santander (Brasil) S. A.",
+		"short_name": "BCO SANTANDER (BRASIL) S.A."
+	}, {
+		"ispb": "91884981",
+		"code": "217",
+		"name": "Banco John Deere S.A.",
+		"short_name": "BANCO JOHN DEERE S.A."
+	}, {
+		"ispb": "92702067",
+		"code": "041",
+		"name": "Banco do Estado do Rio Grande do Sul S.A.",
+		"short_name": "BCO DO ESTADO DO RS S.A."
+	}, {
+		"ispb": "92856905",
+		"code": "117",
+		"name": "Advanced Corretora de Câmbio Ltda.",
+		"short_name": "ADVANCED CC LTDA"
+	}, {
+		"ispb": "92874270",
+		"code": "654",
+		"name": "Banco A. J. Renner S.A.",
+		"short_name": "BCO A.J. RENNER S.A."
+	}, {
+		"ispb": "92894922",
+		"code": "212",
+		"name": "Banco Original S.A.",
+		"short_name": "BANCO ORIGINAL"
+	}, {
+		"ispb": "04814563",
+		"code": "299",
+		"name": "Sorocred - Crédito, Financiamento e Investimento S/A",
+		"short_name": "SOROCRED CFI S.A."
+	}, {
+		"ispb": "14190547",
+		"code": "309",
+		"name": "Cambionet Corretora de Câmbio Ltda.",
+		"short_name": "CAMBIONET CC LTDA"
+	}]
+}

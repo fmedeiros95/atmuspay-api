@@ -1,0 +1,5 @@
+export enum InjectionType {
+	INJECT		= "INJECT",
+	REPOSITORY	= "REPOSITORY",
+	PERSISTENCE	= "PERSISTENCE"
+}
