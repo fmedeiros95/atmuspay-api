@@ -1,5 +1,5 @@
+import { ScheduleTaskOptions } from "../types/Cron";
 import { ScheduledTask } from "node-cron";
-import { ScheduleTaskOptions } from "../types/ScheduleTaskOptions";
 
 export interface ScheduleMeta {
 	expression: string,

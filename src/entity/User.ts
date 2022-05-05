@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from "typeorm";
+import { Column, Entity, Generated, JoinColumn, OneToMany, OneToOne } from "typeorm";
 import { EntityBase } from "../lib/abstracts/EntityBase";
 import {
 	compare as bcryptCompare,
@@ -12,6 +12,8 @@ import { UserAccountBank } from "./UserBankAccount";
 import { Transfer } from "./Transfer";
 import { Withdrawal } from "./Withdrawal";
 import { UserConfig } from "./UserConfig";
+import { UserToken } from "./UserToken";
+import { UserTwoFactor } from "./UserTwoFactor";
 
 export enum UserGender {
 	FEMALE = "F",
@@ -31,6 +33,9 @@ export class User extends EntityBase {
 	@Column()
 	password: string;
 
+	@Column({ nullable: true })
+	password_last_change_at: Date;
+
 	@Column()
 	name: string;
 
@@ -47,8 +52,23 @@ export class User extends EntityBase {
 	@Column({ unique: true })
 	email: string;
 
+	@Column({ unique: true, nullable: true })
+	email_change: string;
+
 	@Column({ default: false })
 	email_verified: boolean;
+
+	@Column({ nullable: true })
+	email_verified_at: Date;
+
+	@Column({ nullable: true })
+	email_changed_at: Date;
+
+	@Column({ nullable: true })
+	email_code: string;
+
+	@Column({ nullable: true })
+	email_code_send_at: Date;
 
 	@Column({ unique: true, nullable: true })
 	document: string;
@@ -78,6 +98,9 @@ export class User extends EntityBase {
 	@OneToOne(() => UserConfig, userConfig => userConfig.user)
 	config: UserConfig;
 
+	@OneToOne(() => UserTwoFactor, userTwoFactor => userTwoFactor.user)
+	two_factor: UserTwoFactor;
+
 	@OneToOne(() => Category)
 	@JoinColumn({ name: "category_id" })
 	category: Category;
@@ -103,9 +126,6 @@ export class User extends EntityBase {
 	@Column({ default: false })
 	access_card: boolean;
 
-	@Column({ nullable: true })
-	two_factors: string;
-
 	@OneToMany(() => UserAccountBank, userAccountBank => userAccountBank.user)
 	accounts: UserAccountBank[];
 
@@ -117,6 +137,9 @@ export class User extends EntityBase {
 
 	@OneToMany(() => Withdrawal, withdrawal => withdrawal.user)
 	withdrawals: Withdrawal[];
+
+	@OneToMany(() => UserToken, token => token.user)
+	tokens: UserToken[];
 
 	toJSON(): User {
 		const obj: any = { ...this };

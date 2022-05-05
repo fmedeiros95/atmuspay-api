@@ -1,4 +1,4 @@
-import { CronTypeParam } from "../types/CronTypeParam";
+import { CronTypeParam } from "../types/Cron";
 
 export interface CronSyntax {
 	second?: CronTypeParam,

@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { MappingMetadata } from "./MappingMetadata";
+import { Map } from "../abstracts/Map";
+import { MappingMetadata } from "./Mapping";
 import { RequestOptions } from "./RequestOptions";
 import { Type } from "./Type";
 

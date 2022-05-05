@@ -4,12 +4,18 @@ import { Helper } from "../lib/decorators";
 @Helper()
 export class UserHelper {
 	maskEmail(email: string): string {
+		const splitEmail = email.split("@");
+		const splitEmailFirstPart = splitEmail[0];
+		const splitEmailLastPart = splitEmail[1];
+
 		// mam****@gmail.com
-		return email?.replace(/^(.+?)@(.+?)$/, "$1****@$2");
+		return `${splitEmailFirstPart.substring(0, 6)}****@${splitEmailLastPart}`;
+		// return email?.replace(/^(.+?)@(.+?)$/, "$1****@$2");
 	}
 
 	maskPhone(phone: string): string {
 		// 55****1135
+		// return `${phone.substring(0, 2)}****${phone.substring(6, phone.length)}`;
 		return phone?.replace(/^(\d{2})(\d{4})(\d{4})$/, "$1****$3");
 	}
 
@@ -48,17 +54,17 @@ export class UserHelper {
 			},
 			password: {
 				two_factors: {
-					is_active: user.two_factors !== null,
-					disable_attempts: 0,
-					type: "otp"
+					is_active: user.two_factor?.is_active,
+					disable_attempts: user.two_factor?.disable_attempts,
+					type: user.two_factor?.type
 				},
-				requested_change: true,
-				last_change: null,
+				last_change: user.password_last_change_at,
 				login_attempts: user.fail_login
 			},
 			email: {
 				verified: user.email_verified,
-				email: this.maskEmail(user.email)	// mam****@gmail.com
+				email: this.maskEmail(user.email),
+				email_change: user?.email_change
 			},
 			validation: {
 				is_valid: true,

@@ -161,6 +161,7 @@ function handleControllers<T>(controllerMeta: ControllerMetadata<T>, meta: Mappi
 			if (meta.returnTypeName == undefined) {
 				meta.returnTypeName = value.constructor.name;
 			}
+			// console.log(meta.returnTypeName);
 
 			if (options.isFile) {
 				value.then((resp: any) => {

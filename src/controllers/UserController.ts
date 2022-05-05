@@ -7,30 +7,37 @@ import { IUserJoin } from "interfaces/UserJoin";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
 import path from "path";
 import { Config } from "../config";
-import { UserHelper } from "../helpers/UserHelper";
-import { UserAddress } from "../entity/UserAddress";
-import { UserBalance } from "../entity/UserBalance";
+import { UtilsHelper } from "../helpers/UtilsHelper";
 
 @Controller({
 	path: ["/user"],
 	authenticated: false
 })
 export class UserController {
-	@Inject() private userHelper: UserHelper;
+	@Inject() private utilsHelper: UtilsHelper;
 
 	@InjectRepository(User) private userRepo: Repository<User>;
-	@InjectRepository(UserAddress) private userAddressRepo: Repository<UserAddress>;
-	@InjectRepository(UserBalance) private userBalanceRepo: Repository<UserBalance>;
+
+	private excludeNames = [
+		"config", "atmus", "atmuspay", "atmuspayoficial", "adms",
+		"configs", "admin", "adm", "administrador", "administradora",
+		"atmus.pay", "atmuspay.com", "atmuspay.com.br", "atmuus_pay", "atmuus_pay.com",
+		"atmusupay.oficial", "atmuspay_oficial", "atmus_pay_oficial", "atmus.pay_oficial",
+		"atmus.payoficial", "atmus.payoficial.com", "atmus.payoficial.com.br"
+	];
 
 	@Request({
 		path: "/",
 		method: RequestMethod.POST
 	})
 	async create(@HttpRequest() req): Promise<any> {
+		let {
+			username,
+			email
+		}: IUserJoin = req.body;
+
 		const {
 			name,
-			email,
-			username,
 			password,
 			confirm_password,
 			termos
@@ -50,11 +57,22 @@ export class UserController {
 			});
 		}
 
+		username = username.trim().toLowerCase();	// Username must be lowercase
+		email = email.trim().toLowerCase();		// Email must be lowercase
+
 		// Valid email?
 		if (!validator.isEmail(email)) {
 			return ApiResError(2, {
 				title: "Erro no cadastro",
 				message: "Email inválido."
+			});
+		}
+
+		const providersFilter = /@bol.com|@yahoo.com|@terra.com|@bol.com.br|@yahoo.com.br|@terra.com.br/;
+		if (providersFilter.test(email)) {
+			return ApiResError(12, {
+				title: "Erro no cadastro",
+				message: "Não é permitido cadastro com email deste provedor."
 			});
 		}
 
@@ -82,6 +100,31 @@ export class UserController {
 			});
 		}
 
+		// check username
+		if (this.excludeNames.includes(username)) {
+			return ApiResError(9, {
+				title: "Erro no cadastro",
+				message: "Nome de usuário inválido."
+			});
+		}
+
+		// Check username format
+		const usernameFormat = /[^\w.]/;
+		if (usernameFormat.test(username)) {
+			return ApiResError(11, {
+				title: "Erro no cadastro",
+				message: "Nome de usuário com formato inválido."
+			});
+		}
+
+		// check username size
+		if (username.length < 3 || username.length > 20) {
+			return ApiResError(10, {
+				title: "Erro no cadastro",
+				message: "Nome de usuário deve conter entre 3 e 20 caracteres."
+			});
+		}
+
 		// check username availability
 		const userExists: User = await this.userRepo.findOne({
 			where: { username }
@@ -104,18 +147,26 @@ export class UserController {
 			});
 		}
 
-		// Create user
-		await this.userRepo.save({
-			name,
-			email,
-			username,
-			password: await User.hashPassword(password)
-		});
+		try {
+			// Create user
+			await this.userRepo.save({
+				name,
+				email,
+				email_code: this.utilsHelper.randomCode(6, true),
+				username,
+				password: await User.hashPassword(password)
+			});
 
-		return ApiResSuccess({
-			title: "Cadastro realizado com sucesso",
-			message: "Seu cadastro foi realizado com sucesso. Agora você pode fazer login."
-		});
+			return ApiResSuccess({
+				title: "Cadastro realizado com sucesso",
+				message: "Seu cadastro foi realizado com sucesso. Agora você pode fazer login."
+			});
+		} catch (e) {
+			return ApiResError(8, {
+				title: "Erro no cadastro",
+				message: "Erro ao cadastrar usuário, tente novamente mais tarde."
+			});
+		}
 	}
 
 	@Request({
@@ -123,6 +174,33 @@ export class UserController {
 		method: RequestMethod.GET
 	})
 	async checkAvailability(@HttpRequest() req, @PathVariable("username") username: string): Promise<any> {
+		username = username.trim().toLowerCase();	// Username must be lowercase
+
+		// check username
+		if (this.excludeNames.includes(username)) {
+			return ApiResError(9, {
+				title: "Erro",
+				message: "Usuário inválido."
+			});
+		}
+
+		// Check username format
+		const usernameFormat = /[^\w.]/;
+		if (usernameFormat.test(username)) {
+			return ApiResError(11, {
+				title: "Erro",
+				message: "Usuário com formato inválido."
+			});
+		}
+
+		// check username size
+		if (username.length < 3 || username.length > 20) {
+			return ApiResError(10, {
+				title: "Erro",
+				message: "Usuário deve conter entre 3 e 20 caracteres."
+			});
+		}
+
 		const user: User = await this.userRepo.findOne({
 			where: { username }
 		});

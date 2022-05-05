@@ -28,6 +28,9 @@ export class UserAddress extends EntityBase {
 	@Column({ nullable: true })
 	zip_code: string;
 
+	@Column({ nullable: true })
+	ibge_code: string;
+
     @OneToOne(() => User, user => user.address)
 	@JoinColumn({ name: "user_id" })
     user: User;

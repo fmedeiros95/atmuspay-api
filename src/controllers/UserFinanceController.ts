@@ -42,6 +42,26 @@ export class UserFinanceController {
 			});
 		}
 
+		const user: User = await this.userRepo.findOneOrFail({
+			where: { id: req.getUserId() },
+			relations: {
+				balance: true,
+				two_factor: true
+			}
+		});
+
+		// Check 2FA
+		if (user.two_factor && user.two_factor.is_active) {
+			const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(user.two_factor.secret, code_2fa || "");
+			if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
+				return ApiResError(7, {
+					title: "Erro na transferência",
+					message: "Código de 2FA inválido."
+				});
+			}
+		}
+
+
 		if (validator.isUUID(to_user_id) === false) {
 			return ApiResError(2, {
 				title: "Erro na transferência",
@@ -56,12 +76,6 @@ export class UserFinanceController {
 			});
 		}
 
-		const user: User = await this.userRepo.findOneOrFail({
-			where: { id: req.getUserId() },
-			relations: {
-				balance: true
-			}
-		});
 		if (user.id === to_user_id) {
 			return ApiResError(4, {
 				title: "Erro na transferência",
@@ -117,7 +131,7 @@ export class UserFinanceController {
 				transaction: this.transactionHelper.publicData(transaction)
 			});
 		} catch (e) {
-			return ApiResError(7, {
+			return ApiResError(8, {
 				title: "Erro na transferência",
 				message: "Ocorreu um erro ao tentar transferir. Tente novamente mais tarde."
 			});
