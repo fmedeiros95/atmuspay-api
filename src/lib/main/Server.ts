@@ -10,7 +10,7 @@ import { Map } from "../abstracts/Map";
 import { HttpStatus } from "../enums/HttpStatus";
 import { RequestMethod } from "../enums/RequestMethod";
 import { MappingMetadata, MappingParameter } from "../interfaces/Mapping";
-import { ServerOptions } from "../interfaces/Server";
+import { ServerOptions, ServerStatic } from "../interfaces/Server";
 import { ControllerMetadata } from "../interfaces/ControllerMetadata";
 import { HashMap } from "../map/HashMap";
 
@@ -32,15 +32,17 @@ export function createServerAndListen(options: ServerOptions) {
 
 			AppServer.use(options.use || []);
 			if (options.serveStatic) {
-				AppServer.use(options.serveStatic.path, express.static(options.serveStatic.use));
+				options.serveStatic.forEach((staticRoute: ServerStatic) => {
+					AppServer.use(staticRoute.path, express.static(staticRoute.use));
+				});
 			}
 
 			const appPrefix = "/api/v1";
 
 			ServerMetadata.forEachAsync((key, value) => {
 				value.app = Router({ mergeParams: true });
-				value.mappings.forEach((key, map) => {
-					handleControllers(value, map);
+				value.mappings.forEach((key, method) => {
+					handleControllers(value, method);
 				});
 
 				if (value.options.authenticated) {

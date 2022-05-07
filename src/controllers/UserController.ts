@@ -218,22 +218,36 @@ export class UserController {
 	}
 
 	@Request({
-		path: "/profile-image/:username",
+		path: "/profile-image",
 		method: RequestMethod.GET,
+		errorCode: 404,
 		isFile: true
 	})
-	async profileImage(@HttpRequest() req, @PathVariable("username") username: string): Promise<any> {
-		const user: User = await this.userRepo.findOne({
-			where: { username }
-		});
-		if (!user) {
+	async profileImage(@HttpRequest() req): Promise<any> {
+		const username: string = req.query.user;
+		if (!username) {
 			return ApiResError(1, {
-				title: "Erro",
-				message: "Usuário não encontrado."
+				title: "Erro ao buscar imagem",
+				message: "Parâmetro de usuário não encontrado."
 			});
 		}
 
-		const profileImage: any = path.resolve(Config.path.uploads, "profile/ttSHrtHMtNML5spVmTQWm6TrqJfxb3Gs.png");
-		return profileImage;
+		try {
+			const user: User = await this.userRepo.findOneByOrFail({ username });
+			if (!user.avatar) {
+				return ApiResError(2, {
+					title: "Erro ao buscar imagem",
+					message: "Usuário não possui imagem de perfil."
+				});
+			}
+
+			const profileImage: string = path.resolve(Config.path.uploads, `${user.avatar}`);
+			return profileImage;
+		} catch (e) {
+			return ApiResError(3, {
+				title: "Erro ao buscar imagem",
+				message: "Usuário não encontrado."
+			});
+		}
 	}
 }

@@ -1,0 +1,12 @@
+{
+	"list": [{
+		"name": "Categoria 1",
+		"description": "Descrição da categoria 1"
+	}, {
+		"name": "Categoria 2",
+		"description": "Descrição da categoria 2"
+	}, {
+		"name": "Categoria 3",
+		"description": "Descrição da categoria 3"
+	}]
+}

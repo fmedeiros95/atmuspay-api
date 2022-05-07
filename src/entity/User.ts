@@ -80,6 +80,12 @@ export class User extends EntityBase {
 	})
 	document_type: UserDocumentType;
 
+	@Column({ default: "profile/default.jpg" })
+	avatar: string;
+
+	@Column({ default: new Date() })
+	avatar_updated_at: Date;
+
 	@Column({ nullable: true, unique: true })
 	phone: string;
 

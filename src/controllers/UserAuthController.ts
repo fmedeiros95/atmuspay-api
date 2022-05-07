@@ -12,8 +12,10 @@ import { UserToken, UserTokenType } from "../entity/UserToken";
 import { UtilsHelper } from "../helpers/UtilsHelper";
 import { UserTwoFactor } from "../entity/UserTwoFactor";
 import { MailService } from "../utils/MailService";
-import { SystemParams } from "../config";
+import { Config, SystemParams } from "../config";
 import { UserUpdate } from "../interfaces/UserUpdate";
+import path from "path";
+import MD5 from "crypto-js/md5";
 
 @Controller({
 	path: ["/user"],
@@ -107,6 +109,84 @@ export class UserAuthController {
 	// USER DETAILS
 
 	@Request({
+		path: "/profile-image",
+		method: RequestMethod.PUT
+	})
+	async updateProfileImage(@HttpRequest() req): Promise<any> {
+		if (!req.files || Object.keys(req.files).length === 0) {
+			return ApiResError(1, {
+				title: "Erro na solicitação",
+				message: "Nenhum arquivo enviado."
+			});
+		}
+		const image: {
+			name: string,
+			size: number,
+			mimetype: string,
+			data: Buffer,
+			md5: string,
+			mv: Function
+		} = req.files.image;
+
+		if (!image) {
+			return ApiResError(1, {
+				title: "Erro na solicitação",
+				message: "Parâmetros inválidos."
+			});
+		}
+
+		const acceptedMimeTypes = ["image/png", "image/jpeg", "image/jpg"];
+		if (!acceptedMimeTypes.includes(image.mimetype)) {
+			return ApiResError(2, {
+				title: "Erro na solicitação",
+				message: "Formato de imagem inválido."
+			});
+		}
+
+		// Image max size is 3MB
+		if (image.size > 3000000) {	// size in bytes
+			return ApiResError(3, {
+				title: "Erro na solicitação",
+				message: "Tamanho de imagem excede o limite de 3MB."
+			});
+		}
+
+		// Get user
+		const user: User = await this.userRepo.findOneBy({ id: req.getUserId() });
+
+		try {
+			const fileName = `profile/${MD5(`${user.id}`)}.${image.mimetype.split("/")[1]}`;
+			const uploadDir = path.join(Config.path.uploads, fileName);
+			const updatedAt = new Date();
+
+			// Move image to uploads
+			await image.mv(uploadDir);
+
+			// Update user image
+			await this.userRepo.save({
+				...user,
+				avatar: fileName,
+				avatar_updated_at: updatedAt
+			});
+
+			return ApiResSuccess({
+				title: "Sucesso na solicitação",
+				message: "Imagem atualizada com sucesso."
+			}, {
+				image: {
+					profile: fileName,
+					updated: updatedAt
+				}
+			});
+		} catch (e) {
+			return ApiResError(4, {
+				title: "Erro na solicitação",
+				message: "Não foi possível atualizar a imagem de perfil, tente novamente mais tarde."
+			});
+		}
+	}
+
+	@Request({
 		path: "/address",
 		method: RequestMethod.PUT
 	})
@@ -119,7 +199,7 @@ export class UserAuthController {
 			code_2fa?: string,
 			city: string,
 			complement?: string,
-			country: string,
+			country?: string,
 			district: string,
 			ibge_code?: string,
 			number: string,
@@ -129,13 +209,9 @@ export class UserAuthController {
 		} = req.body;
 
 		// Verifica se os dados necessários estão presentes
-		if (
-			validator.isEmpty(city) || validator.isEmpty(country) ||
-			validator.isEmpty(district) || validator.isEmpty(number) ||
-			validator.isEmpty(state) || validator.isEmpty(street) ||
-			(country == "Brasil" && (
-				validator.isEmpty(zip_code) ||
-				validator.isEmpty(ibge_code)
+		if (!city || !country || !district || !number ||
+			!state || !street || (country == "Brasil" && (
+				!zip_code || !ibge_code
 			))
 		) {
 			return ApiResError(1, {
@@ -170,18 +246,16 @@ export class UserAuthController {
 			});
 
 			// Update address
-			this.userAddressRepo.save({
-				...address,
-				city,
-				complement,
-				country,
-				district,
-				ibge_code,
-				number,
-				state,
-				street,
-				zip_code
-			});
+			address.city = city;
+			address.complement = complement;
+			address.country = country;
+			address.district = district;
+			address.ibge_code = ibge_code;
+			address.number = number;
+			address.state = state;
+			address.street = street;
+			address.zip_code = zip_code;
+			await this.userAddressRepo.save(address);
 
 			return ApiResSuccess({
 				title: "Sucesso na solicitação",
@@ -935,15 +1009,7 @@ export class UserAuthController {
 			title: "Sucesso na consulta",
 			message: "Usuário consultado com sucesso.",
 		}, {
-			user: {
-				_id: user.id,
-				user: user.username,
-				verified_account: user.email_verified,
-				document: {
-					document: user.document,
-					type: user.document_type,
-				}
-			}
+			user: this.userHelper.publicData(user)
 		});
 	}
 	// /USER SEARCH

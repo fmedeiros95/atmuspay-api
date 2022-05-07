@@ -13,14 +13,16 @@ export interface ServerConfig {
 	basePath?: string;
 }
 
+export interface ServerStatic {
+	path: string;
+	use: any;
+}
+
 export interface ServerOptions {
 	controllers?: Type<any>[];
 	helpers?: Type<any>[];
 	cron?: Type<any>[];
 	socket?: Type<any>[];
 	use?: RequestHandler[];
-	serveStatic?: {
-		use: string,
-		path: string
-	}
+	serveStatic?: ServerStatic[];
 }

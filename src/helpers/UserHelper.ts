@@ -4,23 +4,32 @@ import { Helper } from "../lib/decorators";
 @Helper()
 export class UserHelper {
 	maskEmail(email: string): string {
-		const splitEmail = email.split("@");
-		const splitEmailFirstPart = splitEmail[0];
-		const splitEmailLastPart = splitEmail[1];
-
-		// mam****@gmail.com
-		return `${splitEmailFirstPart.substring(0, 6)}****@${splitEmailLastPart}`;
-		// return email?.replace(/^(.+?)@(.+?)$/, "$1****@$2");
+		// Email mask ema****@example.com
+		const [ username, host ] = email.split("@");
+		return username.slice(0, 3) + "*".repeat(4) + "@" + host;
 	}
 
-	maskPhone(phone: string): string {
-		// 55****1135
-		// return `${phone.substring(0, 2)}****${phone.substring(6, phone.length)}`;
-		return phone?.replace(/^(\d{2})(\d{4})(\d{4})$/, "$1****$3");
+	maskPhone(phone: string): string | null {
+		// Phone mask 55****3572
+		return phone ? phone.substring(0, 2) + "*".repeat(4) + phone.slice(-4) : null;
+	}
+
+	publicData(user: User): any {
+		const userData = {
+			_id: user.id,
+			user: user.username,
+			verified_account: user.verified_account,
+			document: {
+				document: user.document,
+				type: user.document_type,
+			}
+		};
+
+		return userData;
 	}
 
 	privateData(user: User): any {
-		return {
+		const userData = {
 			_id: user.id,
 			document: {
 				document: user.document,
@@ -67,19 +76,19 @@ export class UserHelper {
 				email_change: user?.email_change
 			},
 			validation: {
-				is_valid: true,
+				is_valid: false,
 				files: []
 			},
 			phone: {
 				count_send_verification_code: 0,
 				verified: user.phone_verified,
-				phone: this.maskPhone(user.phone)	// 55****1135
+				phone: this.maskPhone(user.phone)
 			},
 			address: user.address,
 			images: {
 				profile: {
-					updated: "2019-03-16T22:44:57.142Z",
-					profile: "profile/ttSHrtHMtNML5spVmTQWm6TrqJfxb3Gs.png"
+					updated: user.avatar_updated_at,
+					profile: user?.avatar
 				}
 			},
 			balance: {
@@ -89,7 +98,6 @@ export class UserHelper {
 			},
 			birthday: user.birthday,
 			gender: user.gender,
-			is_international: user.is_international,
 			access_card: user.access_card,
 			is_active: user.is_active,
 			finished_by_user: user.finished_by_user,
@@ -104,5 +112,10 @@ export class UserHelper {
 			category: user.category,
 			sessions: []
 		};
+
+		if (!user.avatar) delete userData.images.profile.profile;
+		if (!user.document) delete userData.document;
+
+		return userData;
 	}
 }

@@ -1,18 +1,28 @@
 import { Category } from "../entity/Category";
-import { User } from "../entity/User";
-import { UtilsHelper } from "../helpers/UtilsHelper";
-import { Controller, HttpRequest, Inject, InjectRepository, Request } from "../lib/decorators";
+import { Controller, HttpRequest, InjectRepository, Request } from "../lib/decorators";
 import { RequestMethod } from "../lib/enums/RequestMethod";
 import { Repository } from "typeorm";
 import { ApiResSuccess } from "../utils/Response";
+import { Init } from "../lib/abstracts/Init";
+
+import migrateCategory from "../migrate/category.migrate.json";
 
 @Controller({
 	path: ["/category"]
 })
-export class CategoryController {
-	@Inject() private utilsHelper: UtilsHelper;
+export class CategoryController implements Init {
 
 	@InjectRepository(Category) private categoryRepo: Repository<Category>;
+
+	async onInit() {
+		if (await this.categoryRepo.count()) {
+			return;
+		}
+
+		for await (const category of migrateCategory.list) {
+			await this.categoryRepo.save(category);
+		}
+	}
 
 	@Request({
 		path: "/",

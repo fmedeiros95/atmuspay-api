@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import bodyParser from "body-parser";
 import cors from "cors";
+import fileUpload from "express-fileupload";
 
 // Core
 import { Init } from "./lib/abstracts/Init";
@@ -9,12 +10,14 @@ import { Server } from "./lib/decorators";
 // Controllers
 import { BanksController } from "./controllers/BanksController";
 import { CategoryController } from "./controllers/CategoryController";
+import { DataController } from "./controllers/DataController";
 import { LoginController } from "./controllers/LoginController";
 import { UserController } from "./controllers/UserController";
 import { UserAuthController } from "./controllers/UserAuthController";
 import { UserFinanceController } from "./controllers/UserFinanceController";
 
 // Helpers
+import { HttpHelper } from "./helpers/HttpHelper";
 import { TransactionHelper } from "./helpers/TransactionHelper";
 import { UserHelper } from "./helpers/UserHelper";
 import { UtilsHelper } from "./helpers/UtilsHelper";
@@ -29,6 +32,7 @@ import { Config, SystemParams } from "./config";
 	controllers: [
 		BanksController,
 		CategoryController,
+		DataController,
 		LoginController,
 		UserController,
 		UserAuthController,
@@ -38,6 +42,7 @@ import { Config, SystemParams } from "./config";
 		TestCron
 	],
 	helpers: [
+		HttpHelper,
 		TransactionHelper,
 		UserHelper,
 		UtilsHelper
@@ -48,12 +53,13 @@ import { Config, SystemParams } from "./config";
 			credentials: true
 		}),
 		bodyParser.urlencoded({ extended: true }),
-		bodyParser.json()
+		bodyParser.json(),
+		fileUpload()
 	],
-	serveStatic: {
+	serveStatic: [{
 		path: "/uploads",
 		use: Config.path.uploads
-	},
+	}]
 })
 export class AppServer implements Init {
 	onInit() {
