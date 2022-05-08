@@ -28,82 +28,76 @@ export class UserFinanceController {
 		method: RequestMethod.POST
 	})
 	async newTransfer(@HttpRequest() req): Promise<any> {
-		const {
-			code_2fa,
-			to_user_id,
-			value
-		} = req.body;
-		const fixedValue: number = Math.round(value);
+		try {
+			const {
+				code_2fa,
+				to_user_id,
+				value
+			} = req.body;
+			const fixedValue: number = Math.round(value);
 
-		if (validator.isEmpty(code_2fa) || validator.isEmpty(to_user_id) || !value) {
-			return ApiResError(1, {
-				title: "Erro na transferência",
-				message: "Dados para transferência não enviados."
-			});
-		}
-
-		const user: User = await this.userRepo.findOneOrFail({
-			where: { id: req.getUserId() },
-			relations: {
-				balance: true,
-				two_factor: true
-			}
-		});
-
-		// Check 2FA
-		if (user.two_factor && user.two_factor.is_active) {
-			const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(user.two_factor.secret, code_2fa || "");
-			if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
-				return ApiResError(7, {
-					title: "Erro na transferência",
-					message: "Código de 2FA inválido."
+			if (!code_2fa || !to_user_id || !value) {
+				return ApiResError(2, {
+					title: "Erro na solicitação",
+					message: "Parâmetros não enviados."
 				});
 			}
-		}
 
+			const user: User = await this.userRepo.findOneById(req.getUserId());
 
-		if (validator.isUUID(to_user_id) === false) {
-			return ApiResError(2, {
-				title: "Erro na transferência",
-				message: "Usuário não encontrado."
-			});
-		}
-
-		if (isNaN(fixedValue) || fixedValue <= 0) {
-			return ApiResError(3, {
-				title: "Erro na transferência",
-				message: "Valor inválido."
-			});
-		}
-
-		if (user.id === to_user_id) {
-			return ApiResError(4, {
-				title: "Erro na transferência",
-				message: "Você não pode transferir para você mesmo."
-			});
-		}
-
-		if (user.balance.balance < fixedValue) {
-			return ApiResError(5, {
-				title: "Erro na transferência",
-				message: "Saldo insuficiente."
-			});
-		}
-
-		const toUser: User = await this.userRepo.findOneOrFail({
-			where: { id: to_user_id },
-			relations: {
-				balance: true
+			// Check 2FA
+			if (user.two_factor && user.two_factor.is_active) {
+				const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(user.two_factor.secret, code_2fa || "");
+				if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
+					return ApiResError(7, {
+						title: "Erro na solicitação",
+						message: "Código de 2FA inválido."
+					});
+				}
 			}
-		});
-		if (!toUser) {
-			return ApiResError(6, {
-				title: "Erro na transferência",
-				message: "Usuário não encontrado."
-			});
-		}
 
-		try {
+
+			if (validator.isUUID(to_user_id) === false) {
+				return ApiResError(2, {
+					title: "Erro na solicitação",
+					message: "Usuário não encontrado."
+				});
+			}
+
+			if (isNaN(fixedValue) || fixedValue <= 0) {
+				return ApiResError(3, {
+					title: "Erro na solicitação",
+					message: "Valor inválido."
+				});
+			}
+
+			if (user.id === to_user_id) {
+				return ApiResError(4, {
+					title: "Erro na solicitação",
+					message: "Você não pode transferir para você mesmo."
+				});
+			}
+
+			if (user.balance.balance < fixedValue) {
+				return ApiResError(5, {
+					title: "Erro na solicitação",
+					message: "Saldo insuficiente."
+				});
+			}
+
+			const toUser: User = await this.userRepo.findOneOrFail({
+				where: { id: to_user_id },
+				relations: {
+					balance: true
+				}
+			});
+			if (!toUser) {
+				return ApiResError(6, {
+					title: "Erro na solicitação",
+					message: "Usuário não encontrado."
+				});
+			}
+
 			// TODO: Implementar a transferência
 			const transfer: Transfer = await this.transferRepo.save({
 				send_from: user,
@@ -125,15 +119,15 @@ export class UserFinanceController {
 			});
 
 			return ApiResSuccess({
-				title: "Sucesso na transferência",
-				message: "Transferência realizada com sucesso."
+				title: "Sucesso na solicitação",
+				message: "Sua transferência foi realizada com sucesso."
 			}, {
 				transaction: this.transactionHelper.publicData(transaction)
 			});
 		} catch (e) {
-			return ApiResError(8, {
-				title: "Erro na transferência",
-				message: "Ocorreu um erro ao tentar transferir. Tente novamente mais tarde."
+			return ApiResError(1, {
+				title: "Erro na solicitação",
+				message: "Não conseguimos processar sua solicitação, tente novamente mais tarde."
 			});
 		}
 	}

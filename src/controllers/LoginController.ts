@@ -20,64 +20,70 @@ export class LoginController {
 		method: RequestMethod.POST
 	})
 	async index(@HttpRequest() req): Promise<any> {
-		const {
-			username,
-			password
-		}: IUserLogin = req.body;
+		try {
+			const {
+				username,
+				password
+			}: IUserLogin = req.body;
 
 
-		// Validar formulário
-		if (validator.isEmpty(username) || validator.isEmpty(password)) {
-			return ApiResError(1, {
-				title: "Erro no login",
-				message: "Dados para login não enviados."
+			// Validar formulário
+			if (!username || !password) {
+				return ApiResError(2, {
+					title: "Erro no login",
+					message: "Dados para login não enviados."
+				});
+			}
+
+			// Check if user exists
+			const user: User = await this.userRepo.findOneBy({ username });
+			if (!user) {
+				return ApiResError(3, {
+					title: "Erro no login",
+					message: "Usuário ou senha inválidos, tente novamente."
+				});
+			}
+
+			if (user.fail_login >= 3) {
+				return ApiResError(4, {
+					title: "Erro no login",
+					message: "Voce errou sua senha mais de 3 vezes. Para conseguir acessar novamente voce deve criar uma nova senha."
+				});
+			}
+
+
+			// Check if password is correct
+			const isPasswordCorrect: boolean = await user.checkPassword(password);
+			if (!isPasswordCorrect) {
+				// Increment fail_login
+				++user.fail_login;
+				await this.userRepo.save(user);
+
+				return ApiResError(3, {
+					title: "Erro no login",
+					message: "Usuário ou senha inválidos, tente novamente."
+				});
+			}
+
+			// Generate token
+			const token: string = this.utilsHelper.createJWT(user.id, {
+				expiresIn: "1d"
 			});
-		}
 
-		// Check if user exists
-		const user: User = await this.userRepo.findOne({
-			where: { username }
-		});
-		if (!user) {
-			return ApiResError(2, {
-				title: "Erro no login",
-				message: "Usuário ou senha inválidos, tente novamente."
-			});
-		}
-
-		if (user.fail_login >= 3) {
-			return ApiResError(3, {
-				title: "Erro no login",
-				message: "Voce errou sua senha mais de 3 vezes. Para conseguir acessar novamente voce deve criar uma nova senha."
-			});
-		}
-
-
-		// Check if password is correct
-		const isPasswordCorrect: boolean = await user.checkPassword(password);
-		if (!isPasswordCorrect) {
-			++user.fail_login;
+			// Reset failLogin
+			user.fail_login = 0;
 			await this.userRepo.save(user);
 
-			return ApiResError(2, {
-				title: "Erro no login",
-				message: "Usuário ou senha inválidos, tente novamente."
+			// Return token
+			return ApiResSuccess({
+				title: "Sucesso no login",
+				message: "Login efetuado com sucesso"
+			}, { token });
+		} catch (error) {
+			return ApiResError(1, {
+				title: "Falha na solicitação",
+				message: "Não foi possível realizar a solicitação, tente novamente mais tarde."
 			});
 		}
-
-		// Generate token
-		const token: string = this.utilsHelper.createJWT(user.id, {
-			expiresIn: "1d"
-		});
-
-		// Reset failLogin
-		user.fail_login = 0;
-		await this.userRepo.save(user);
-
-		// Return token
-		return ApiResSuccess({
-			title: "Sucesso no login",
-			message: "Login efetuado com sucesso"
-		}, { token });
 	}
 }

@@ -11,6 +11,9 @@ export enum UserAccountBankType {
 @Entity()
 export class UserAccountBank extends EntityBase {
 	@Column()
+	agency: string;
+
+	@Column()
 	account: string;
 
 	@Column("enum", {
@@ -18,8 +21,8 @@ export class UserAccountBank extends EntityBase {
 	})
 	account_type: UserAccountBankType;
 
-	@Column()
-	agency: string;
+	@Column({ default: false })
+	is_default: boolean;
 
 	@Column({ default: false })
 	is_third: boolean;
@@ -30,14 +33,11 @@ export class UserAccountBank extends EntityBase {
 	@Column({ nullable: true })
 	document: string;
 
-	@Column({ default: false })
-	default: boolean;
-
 	@ManyToOne(() => User)
 	@JoinColumn({ name: "user_id" })
 	user: User;
 
-	@ManyToOne(() => Bank)
+	@ManyToOne(() => Bank, { eager: true })
 	@JoinColumn({ name: "bank_id" })
 	bank: Bank;
 }

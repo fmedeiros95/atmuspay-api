@@ -12,9 +12,13 @@ import { BanksController } from "./controllers/BanksController";
 import { CategoryController } from "./controllers/CategoryController";
 import { DataController } from "./controllers/DataController";
 import { LoginController } from "./controllers/LoginController";
+import { UserAccountController } from "./controllers/UserAccountController";
+import { UserApiController } from "./controllers/UserApiController";
+import { UserFinanceController } from "./controllers/UserFinanceController";
+import { UserTwoFactorController } from "./controllers/UserTwoFactorController";
+import { UserValidationController } from "./controllers/UserValidationController";
 import { UserController } from "./controllers/UserController";
 import { UserAuthController } from "./controllers/UserAuthController";
-import { UserFinanceController } from "./controllers/UserFinanceController";
 
 // Helpers
 import { HttpHelper } from "./helpers/HttpHelper";
@@ -34,12 +38,16 @@ import { Config, SystemParams } from "./config";
 		CategoryController,
 		DataController,
 		LoginController,
+		UserAccountController,
+		UserApiController,
+		UserFinanceController,
+		UserTwoFactorController,
+		UserValidationController,
 		UserController,
-		UserAuthController,
-		UserFinanceController
+		UserAuthController
 	],
 	cron: [
-		TestCron
+		// TestCron
 	],
 	helpers: [
 		HttpHelper,

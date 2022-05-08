@@ -3,8 +3,9 @@ interface IApiResMessage {
 	message: string;
 }
 
-export const ApiResError = (messageCode: number, message: IApiResMessage): Promise<never> => {
+export const ApiResError = (messageCode: number, message: IApiResMessage, error?: any): Promise<never> => {
 	return Promise.reject({
+		...error,
 		messageCode,
 		message
 	});

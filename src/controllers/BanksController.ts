@@ -2,7 +2,7 @@ import { Repository } from "typeorm";
 import { Controller, InjectRepository, Request } from "../lib/decorators";
 import { RequestMethod } from "../lib/enums/RequestMethod";
 import { Bank } from "../entity/Bank";
-import { ApiResSuccess } from "../utils/Response";
+import { ApiResError, ApiResSuccess } from "../utils/Response";
 import { Init } from "../lib/abstracts/Init";
 
 import migrateBank from "../migrate/bank.migrate.json";
@@ -14,12 +14,13 @@ export class BanksController implements Init {
 	@InjectRepository(Bank) private bankRepo: Repository<Bank>;
 
 	async onInit() {
-		if (await this.bankRepo.count()) {
-			return;
-		}
-
-		for await (const bank of migrateBank.list) {
-			await this.bankRepo.save(bank);
+		try {
+			if (await this.bankRepo.count()) return;
+			for await (const bank of migrateBank.list) {
+				await this.bankRepo.save(bank);
+			}
+		} catch (error) {
+			console.log("[ERROR] Bank (MIGRATE):", error);
 		}
 	}
 
@@ -28,20 +29,27 @@ export class BanksController implements Init {
 		method: RequestMethod.GET
 	})
 	async index(): Promise<any> {
-		const banks = await this.bankRepo.find();
-		return ApiResSuccess({
-			title: "Sucesso na consulta",
-			message: "Consulta realizada com sucesso",
-		}, {
-			list: banks.map(bank => {
-				return {
-					_id: bank.id,
-					name: bank.name,
-					short_name: bank.short_name,
-					code: bank.code,
-					ispb: bank.ispb
-				};
-			})
-		});
+		try {
+			const banks = await this.bankRepo.find();
+			return ApiResSuccess({
+				title: "Sucesso na consulta",
+				message: "Consulta realizada com sucesso",
+			}, {
+				list: banks.map(bank => {
+					return {
+						_id: bank.id,
+						name: bank.name,
+						short_name: bank.short_name,
+						code: bank.code,
+						ispb: bank.ispb
+					};
+				})
+			});
+		} catch (error) {
+			return ApiResError(1, {
+				title: "Erro na consulta",
+				message: "Não foi possível realizar a consulta, tente novamente mais tarde."
+			});
+		}
 	}
 }

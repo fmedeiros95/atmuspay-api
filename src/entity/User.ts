@@ -14,6 +14,7 @@ import { Withdrawal } from "./Withdrawal";
 import { UserConfig } from "./UserConfig";
 import { UserToken } from "./UserToken";
 import { UserTwoFactor } from "./UserTwoFactor";
+import { UserValidation } from "./UserValidation";
 
 export enum UserGender {
 	FEMALE = "F",
@@ -92,27 +93,47 @@ export class User extends EntityBase {
 	@Column({ default: false })
 	phone_verified: boolean;
 
+	@Column({ default: false })
+	is_emancipated: boolean;
+
 	@Column({ default: 0 })
 	fail_login: number;
 
-	@OneToOne(() => UserAddress, userAddress => userAddress.user)
+	@OneToOne(() => UserAddress, userAddress => userAddress.user, {
+		eager: true,
+		cascade: true
+	})
 	address: UserAddress;
 
-	@OneToOne(() => UserBalance, userBalance => userBalance.user)
+	@OneToOne(() => UserBalance, userBalance => userBalance.user, {
+		eager: true,
+		cascade: true
+	})
 	balance: UserBalance;
 
-	@OneToOne(() => UserConfig, userConfig => userConfig.user)
+	@OneToOne(() => UserConfig, userConfig => userConfig.user, {
+		eager: true,
+		cascade: true
+	})
 	config: UserConfig;
 
-	@OneToOne(() => UserTwoFactor, userTwoFactor => userTwoFactor.user)
+	@OneToOne(() => UserTwoFactor, userTwoFactor => userTwoFactor.user, {
+		eager: true,
+		cascade: true
+	})
 	two_factor: UserTwoFactor;
 
-	@OneToOne(() => Category)
-	@JoinColumn({ name: "category_id" })
-	category: Category;
+	@OneToMany(() => UserAccountBank, userAccountBank => userAccountBank.user, {
+		eager: true,
+		cascade: true
+	})
+	accounts: UserAccountBank[];
 
-	@Column({ default: false })
-	is_international: boolean;
+	@OneToMany(() => UserValidation, userValidations => userValidations.user, {
+		eager: true,
+		cascade: true
+	})
+	validations: UserValidation[];
 
 	@Column({ default: false })
 	is_active: boolean;
@@ -131,9 +152,6 @@ export class User extends EntityBase {
 
 	@Column({ default: false })
 	access_card: boolean;
-
-	@OneToMany(() => UserAccountBank, userAccountBank => userAccountBank.user)
-	accounts: UserAccountBank[];
 
 	@OneToMany(() => Transaction, transaction => transaction.user)
 	transactions: Transaction[];

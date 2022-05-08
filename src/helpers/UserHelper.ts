@@ -1,3 +1,4 @@
+import { UserAccountBank } from "entity/UserBankAccount";
 import { User } from "../entity/User";
 import { Helper } from "../lib/decorators";
 
@@ -107,9 +108,8 @@ export class UserHelper {
 			updated_at: user.updated_at,
 			user: user.username,
 			name: user.name,
-			accounts: user.accounts,
+			accounts: user.accounts.map(account => this.accountPrivateData(account)),
 			created_at: user.created_at,
-			category: user.category,
 			sessions: []
 		};
 
@@ -117,5 +117,28 @@ export class UserHelper {
 		if (!user.document) delete userData.document;
 
 		return userData;
+	}
+
+	public accountPrivateData(userAccountBank: UserAccountBank): any {
+		const userAccountBankData = {
+			_id: userAccountBank.id,
+			bank: userAccountBank.bank.name,
+			agency: userAccountBank.agency,
+			account: userAccountBank.account,
+			codigo: userAccountBank.bank.code,
+			ispb: userAccountBank.bank.ispb,
+			account_type: userAccountBank.account_type,
+			is_third: userAccountBank.is_third,
+			default: userAccountBank.is_default,
+			name: userAccountBank.name,
+			document: userAccountBank.document
+		};
+
+		if (!userAccountBankData.is_third) {
+			delete userAccountBankData.name;
+			delete userAccountBankData.document;
+		}
+
+		return userAccountBankData;
 	}
 }

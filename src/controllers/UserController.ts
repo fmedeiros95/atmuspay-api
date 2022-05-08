@@ -31,140 +31,131 @@ export class UserController {
 		method: RequestMethod.POST
 	})
 	async create(@HttpRequest() req): Promise<any> {
-		let {
-			username,
-			email
-		}: IUserJoin = req.body;
-
-		const {
-			name,
-			password,
-			confirm_password,
-			termos
-		}: IUserJoin = req.body;
-
-		// Validar formulário
-		if (
-			validator.isEmpty(name) ||
-			validator.isEmpty(email) ||
-			validator.isEmpty(username) ||
-			validator.isEmpty(password) ||
-			validator.isEmpty(confirm_password)
-		) {
-			return ApiResError(1, {
-				title: "Erro no cadastro",
-				message: "Dados para cadastro não enviados."
-			});
-		}
-
-		username = username.trim().toLowerCase();	// Username must be lowercase
-		email = email.trim().toLowerCase();		// Email must be lowercase
-
-		// Valid email?
-		if (!validator.isEmail(email)) {
-			return ApiResError(2, {
-				title: "Erro no cadastro",
-				message: "Email inválido."
-			});
-		}
-
-		const providersFilter = /@bol.com|@yahoo.com|@terra.com|@bol.com.br|@yahoo.com.br|@terra.com.br/;
-		if (providersFilter.test(email)) {
-			return ApiResError(12, {
-				title: "Erro no cadastro",
-				message: "Não é permitido cadastro com email deste provedor."
-			});
-		}
-
-		// check password size
-		if (validator.isEmpty(password) || password.trim().length < 8) {
-			return ApiResError(3, {
-				title: "Erro no cadastro",
-				message: "Senha deve conter no mínimo 6 caracteres."
-			});
-		}
-
-		// check password match
-		if (password !== confirm_password) {
-			return ApiResError(4, {
-				title: "Erro no cadastro",
-				message: "As senhas não conferem"
-			});
-		}
-
-		// check termos
-		if (!termos) {
-			return ApiResError(5, {
-				title: "Erro no cadastro",
-				message: "Você deve aceitar os termos de uso."
-			});
-		}
-
-		// check username
-		if (this.excludeNames.includes(username)) {
-			return ApiResError(9, {
-				title: "Erro no cadastro",
-				message: "Nome de usuário inválido."
-			});
-		}
-
-		// Check username format
-		const usernameFormat = /[^\w.]/;
-		if (usernameFormat.test(username)) {
-			return ApiResError(11, {
-				title: "Erro no cadastro",
-				message: "Nome de usuário com formato inválido."
-			});
-		}
-
-		// check username size
-		if (username.length < 3 || username.length > 20) {
-			return ApiResError(10, {
-				title: "Erro no cadastro",
-				message: "Nome de usuário deve conter entre 3 e 20 caracteres."
-			});
-		}
-
-		// check username availability
-		const userExists: User = await this.userRepo.findOne({
-			where: { username }
-		});
-		if (userExists) {
-			return ApiResError(6, {
-				title: "Erro no cadastro",
-				message: "Usuário já cadastrado."
-			});
-		}
-
-		// check email availability
-		const emailExists: User = await this.userRepo.findOne({
-			where: { email }
-		});
-		if (emailExists) {
-			return ApiResError(7, {
-				title: "Erro no cadastro",
-				message: "Email já cadastrado."
-			});
-		}
-
 		try {
+			let {
+				username,
+				email
+			}: IUserJoin = req.body;
+
+			const {
+				name,
+				password,
+				confirm_password,
+				termos
+			}: IUserJoin = req.body;
+
+			// Validar formulário
+			if (!name || !email || !username || !password || !confirm_password) {
+				return ApiResError(2, {
+					title: "Erro no cadastro",
+					message: "Dados para cadastro não enviados."
+				});
+			}
+
+			username = username.trim().toLowerCase();	// Username must be lowercase
+			email = email.trim().toLowerCase();			// Email must be lowercase
+
+			// Valid email?
+			if (!validator.isEmail(email)) {
+				return ApiResError(3, {
+					title: "Erro no cadastro",
+					message: "Email inválido."
+				});
+			}
+
+			const providersFilter = /@bol.com|@yahoo.com|@terra.com|@bol.com.br|@yahoo.com.br|@terra.com.br/;
+			if (providersFilter.test(email)) {
+				return ApiResError(4, {
+					title: "Erro no cadastro",
+					message: "Não é permitido cadastro com email deste provedor."
+				});
+			}
+
+			// check password size
+			if (password.trim().length < 8) {
+				return ApiResError(5, {
+					title: "Erro no cadastro",
+					message: "Senha deve conter no mínimo 6 caracteres."
+				});
+			}
+
+			// check password match
+			if (password !== confirm_password) {
+				return ApiResError(6, {
+					title: "Erro no cadastro",
+					message: "As senhas não conferem"
+				});
+			}
+
+			// check termos
+			if (!termos) {
+				return ApiResError(7, {
+					title: "Erro no cadastro",
+					message: "Você deve aceitar os termos de uso."
+				});
+			}
+
+			// check username
+			if (this.excludeNames.includes(username)) {
+				return ApiResError(8, {
+					title: "Erro no cadastro",
+					message: "Nome de usuário inválido."
+				});
+			}
+
+			// Check username format
+			const usernameFormat = /[^\w.]/;
+			if (usernameFormat.test(username)) {
+				return ApiResError(9, {
+					title: "Erro no cadastro",
+					message: "Nome de usuário com formato inválido."
+				});
+			}
+
+			// check username size
+			if (username.length < 3 || username.length > 20) {
+				return ApiResError(10, {
+					title: "Erro no cadastro",
+					message: "Nome de usuário deve conter entre 3 e 20 caracteres."
+				});
+			}
+
+			// check username availability
+			const userExists: number = await this.userRepo.countBy({ username });
+			if (userExists) {
+				return ApiResError(11, {
+					title: "Erro no cadastro",
+					message: "Usuário já cadastrado."
+				});
+			}
+
+			// check email availability
+			const emailExists: number = await this.userRepo.countBy({ email });
+			if (emailExists) {
+				return ApiResError(12, {
+					title: "Erro no cadastro",
+					message: "Email já cadastrado."
+				});
+			}
+
 			// Create user
 			await this.userRepo.save({
 				name,
 				email,
 				email_code: this.utilsHelper.randomCode(6, true),
+				email_code_send_at: new Date(),
 				username,
 				password: await User.hashPassword(password)
 			});
 
 			return ApiResSuccess({
-				title: "Cadastro realizado com sucesso",
+				title: "Cadastro realizado",
 				message: "Seu cadastro foi realizado com sucesso. Agora você pode fazer login."
 			});
 		} catch (e) {
-			return ApiResError(8, {
+			return ApiResError(1, {
 				title: "Erro no cadastro",
-				message: "Erro ao cadastrar usuário, tente novamente mais tarde."
+				message: "Não foi possivel completar o cadastro, tente novamente mais tarde."
 			});
 		}
 	}
@@ -174,78 +165,75 @@ export class UserController {
 		method: RequestMethod.GET
 	})
 	async checkAvailability(@HttpRequest() req, @PathVariable("username") username: string): Promise<any> {
-		username = username.trim().toLowerCase();	// Username must be lowercase
+		try {
+			username = username.trim().toLowerCase();	// Username must be lowercase
 
-		// check username
-		if (this.excludeNames.includes(username)) {
-			return ApiResError(9, {
-				title: "Erro",
-				message: "Usuário inválido."
+			// check username
+			if (this.excludeNames.includes(username)) {
+				return ApiResError(2, {
+					title: "Erro na consulta",
+					message: "Usuário inválido."
+				});
+			}
+
+			// Check username format
+			const usernameFormat = /[^\w.]/;
+			if (usernameFormat.test(username)) {
+				return ApiResError(3, {
+					title: "Erro na consulta",
+					message: "Usuário com formato inválido."
+				});
+			}
+
+			// check username size
+			if (username.length < 3 || username.length > 20) {
+				return ApiResError(4, {
+					title: "Erro na consulta",
+					message: "Usuário deve conter entre 3 e 20 caracteres."
+				});
+			}
+
+			const user: number = await this.userRepo.countBy({ username });
+			if (user) {
+				return ApiResError(5, {
+					title: "Erro na consulta",
+					message: "Esse usuário já está em uso."
+				});
+			}
+
+			return ApiResSuccess({
+				title: "Sucesso na consulta",
+				message: "Esse usuário está disponível."
 			});
-		}
-
-		// Check username format
-		const usernameFormat = /[^\w.]/;
-		if (usernameFormat.test(username)) {
-			return ApiResError(11, {
-				title: "Erro",
-				message: "Usuário com formato inválido."
-			});
-		}
-
-		// check username size
-		if (username.length < 3 || username.length > 20) {
-			return ApiResError(10, {
-				title: "Erro",
-				message: "Usuário deve conter entre 3 e 20 caracteres."
-			});
-		}
-
-		const user: User = await this.userRepo.findOne({
-			where: { username }
-		});
-		if (user) {
+		} catch (e) {
 			return ApiResError(1, {
-				title: "Erro",
-				message: "Esse usuário já está em uso."
+				title: "Erro na consulta",
+				message: "Não conseguimos realizar a consulta, tente novamente mais tarde."
 			});
 		}
-
-		return ApiResSuccess({
-			title: "Sucesso",
-			message: "Esse usuário está disponível."
-		});
 	}
 
 	@Request({
-		path: "/profile-image",
+		path: "/profile-image/:username",
 		method: RequestMethod.GET,
 		errorCode: 404,
 		isFile: true
 	})
-	async profileImage(@HttpRequest() req): Promise<any> {
-		const username: string = req.query.user;
-		if (!username) {
-			return ApiResError(1, {
-				title: "Erro ao buscar imagem",
-				message: "Parâmetro de usuário não encontrado."
-			});
-		}
-
+	async profileImage(@HttpRequest() req, @PathVariable("username") username: string): Promise<any> {
 		try {
-			const user: User = await this.userRepo.findOneByOrFail({ username });
-			if (!user.avatar) {
+			if (!username) {
 				return ApiResError(2, {
 					title: "Erro ao buscar imagem",
-					message: "Usuário não possui imagem de perfil."
+					message: "Parâmetro de usuário não encontrado."
 				});
 			}
 
+			const user: User = await this.userRepo.findOneByOrFail({ username });
 			const profileImage: string = path.resolve(Config.path.uploads, `${user.avatar}`);
 			return profileImage;
 		} catch (e) {
-			return ApiResError(3, {
-				title: "Erro ao buscar imagem",
+			return ApiResError(1, {
+				title: "Erro ao consulta",
 				message: "Usuário não encontrado."
 			});
 		}
