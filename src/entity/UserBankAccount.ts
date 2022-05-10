@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from "typeorm";
-import { EntityBase } from "../lib/abstracts/EntityBase";
+import { EntityBase } from "../_core/abstracts/EntityBase";
 import { Bank } from "./Bank";
 import { User } from "./User";
 

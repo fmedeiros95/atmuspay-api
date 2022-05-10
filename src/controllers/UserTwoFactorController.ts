@@ -1,14 +1,15 @@
 import { User } from "../entity/User";
 import { UserTwoFactor } from "../entity/UserTwoFactor";
 import { UtilsHelper } from "../helpers/UtilsHelper";
-import { Controller, HttpRequest, Inject, InjectRepository, Request } from "../lib/decorators";
-import { RequestMethod } from "../lib/enums/RequestMethod";
+import { Controller, HttpRequest, HttpResponse, Inject, InjectRepository, Method } from "../_core/decorators";
+import { RequestMethod } from "../_core/enums/RequestMethod";
 import { Repository } from "typeorm";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
+import { checkJwt } from "../middlewares/checkJwt";
+import { Request, Response } from "express";
 
 @Controller({
-	path: ["/user/two-factors"],
-	authenticated: true
+	path: ["/user/two-factors"]
 })
 export class UserTwoFactorController {
 	@Inject() private utilsHelper: UtilsHelper;
@@ -16,12 +17,13 @@ export class UserTwoFactorController {
 	@InjectRepository(User) private userRepo: Repository<User>;
 	@InjectRepository(UserTwoFactor) private userTwoFactor: Repository<UserTwoFactor>;
 
-	@Request({
+	@Method({
 		path: "/code",
-		method: RequestMethod.GET
+		method: RequestMethod.GET,
+		middlewares: [ checkJwt ]
 	})
-	async getCode(@HttpRequest() req): Promise<any> {
-		const user: User = await this.userRepo.findOneBy({ id: req.getUserId() });
+	async getCode(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
+		const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
 		const userTwoFactor: UserTwoFactor = await this.userTwoFactor.findOne({
 			where: { user: { id: user.id } }
 		});
@@ -61,12 +63,13 @@ export class UserTwoFactorController {
 		}
 	}
 
-	@Request({
+	@Method({
 		path: "/active",
-		method: RequestMethod.PUT
+		method: RequestMethod.PUT,
+		middlewares: [ checkJwt ]
 	})
-	async active(@HttpRequest() req): Promise<any> {
-		const user: User = await this.userRepo.findOneBy({ id: req.getUserId() });
+	async active(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
+		const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
 		const userTwoFactor: UserTwoFactor = await this.userTwoFactor.findOne({
 			where: { user: { id: user.id } }
 		});
@@ -105,12 +108,13 @@ export class UserTwoFactorController {
 		}
 	}
 
-	@Request({
+	@Method({
 		path: "/disable",
-		method: RequestMethod.PUT
+		method: RequestMethod.PUT,
+		middlewares: [ checkJwt ]
 	})
-	async disable(@HttpRequest() req): Promise<any> {
-		const user: User = await this.userRepo.findOneBy({ id: req.getUserId() });
+	async disable(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
+		const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
 		const userTwoFactor: UserTwoFactor = await this.userTwoFactor.findOne({
 			where: { user: { id: user.id } }
 		});

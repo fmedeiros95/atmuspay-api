@@ -1,11 +1,12 @@
 import validator from "validator";
 import { Repository } from "typeorm";
-import { RequestMethod } from "../lib/enums/RequestMethod";
-import { Controller, HttpRequest, Inject, InjectRepository, Request } from "../lib/decorators";
+import { RequestMethod } from "../_core/enums/RequestMethod";
+import { Controller, HttpRequest, Inject, InjectRepository, Method } from "../_core/decorators";
 import { IUserLogin } from "../interfaces/UserLogin";
 import { UtilsHelper } from "../helpers/UtilsHelper";
 import { User } from "../entity/User";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
+import { Request } from "express";
 
 @Controller({
 	path: ["/login"]
@@ -15,11 +16,11 @@ export class LoginController {
 
 	@InjectRepository(User) private userRepo: Repository<User>;
 
-	@Request({
+	@Method({
 		path: "/",
 		method: RequestMethod.POST
 	})
-	async index(@HttpRequest() req): Promise<any> {
+	async index(@HttpRequest() req: Request): Promise<any> {
 		try {
 			const {
 				username,

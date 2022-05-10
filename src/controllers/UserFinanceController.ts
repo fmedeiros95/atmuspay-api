@@ -1,19 +1,18 @@
 import validator from "validator";
-import { Between, FindManyOptions, Raw, Repository } from "typeorm";
+import { FindManyOptions, FindOptionsOrderValue, Raw, Repository } from "typeorm";
 import { User } from "../entity/User";
-import { Controller, HttpRequest, Inject, InjectRepository, Request } from "../lib/decorators";
-import { RequestMethod } from "../lib/enums/RequestMethod";
+import { Controller, HttpRequest, HttpResponse, Inject, InjectRepository, Method } from "../_core/decorators";
+import { RequestMethod } from "../_core/enums/RequestMethod";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
-import { Transaction, TransactionStatus, TransactionType } from "../entity/Transaction";
+import { Transaction } from "../entity/Transaction";
 import { Transfer } from "../entity/Transfer";
 import { TransactionHelper } from "../helpers/TransactionHelper";
-import { startOfDay, endOfDay } from "date-fns";
-import moment from "moment";
 import { UtilsHelper } from "../helpers/UtilsHelper";
+import { checkJwt } from "../middlewares/checkJwt";
+import { Request, Response } from "express";
 
 @Controller({
-	path: ["/user/finance"],
-	authenticated: true
+	path: ["/user/finance"]
 })
 export class UserFinanceController {
 	@InjectRepository(User) private userRepo: Repository<User>;
@@ -23,11 +22,12 @@ export class UserFinanceController {
 	@Inject() private transactionHelper: TransactionHelper;
 	@Inject() private utilsHelper: UtilsHelper;
 
-	@Request({
+	@Method({
 		path: "/new-transfer",
-		method: RequestMethod.POST
+		method: RequestMethod.POST,
+		middlewares: [ checkJwt ]
 	})
-	async newTransfer(@HttpRequest() req): Promise<any> {
+	async newTransfer(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		try {
 			const {
 				code_2fa,
@@ -43,7 +43,8 @@ export class UserFinanceController {
 				});
 			}
 
-			const user: User = await this.userRepo.findOneById(req.getUserId());
+			// Get user
+			const user: User = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
 
 			// Check 2FA
 			if (user.two_factor && user.two_factor.is_active) {
@@ -132,85 +133,94 @@ export class UserFinanceController {
 		}
 	}
 
-	@Request({
+	@Method({
 		path: "/account-extract",
-		method: RequestMethod.GET
+		method: RequestMethod.GET,
+		middlewares: [ checkJwt ]
 	})
-	async accountExtract(@HttpRequest() req): Promise<any> {
-		const user: User = await this.userRepo.findOne({
-			where: { id: req.getUserId() }
-		});
-
-		let {
-			page,			// Pagina atual
-			results,		// Results per page
-			order_type,		// ASC or DESC
-		} = req.query;
-
-		const {
-			initialDate,	// Data inicial de consulta
-			finalDate,		// Data final de consulta
-			value_exact,	// Valor exato
-			value,			// negative or positive
-			type			// Transaction type
-		} = req.query;
-
-		page = page || 1;
-		results = results || 20;
-		order_type = order_type	|| "DESC";
-
-		if (!validator.isDate(initialDate) || !validator.isDate(finalDate)) {
-			return ApiResError(1, {
-				title: "Erro na consulta",
-				message: "Dados para consulta não enviados."
-			});
-		}
-
-		const instaceInitialDate = new Date(initialDate);
-		const instaceFinalDate = new Date(finalDate);
-
-		if (instaceInitialDate > instaceFinalDate) {
-			return ApiResError(2, {
-				title: "Erro na consulta",
-				message: "Data inicial maior que a data final."
-			});
-		}
-
-		// Default filter
-		const query: FindManyOptions<Transaction> = {
-			where: {
-				user: { id: user.id },
-				created_at: Raw(alias => `${alias} BETWEEN :initialDate AND :finalDate`, {
-					initialDate: `${initialDate} 00:00:00`,
-					finalDate: `${finalDate} 23:59:59`
-				}),
-				// created_at: Between(initialDate, finalDate)
-			},
-			order: { created_at: order_type },
-			skip: (page - 1) * results,
-			take: results,
-			relations: {
-				transfer: true,
-				withdrawal: true
-			}
-		};
-
-		// Exact value filter
-		if (value_exact && !isNaN(value_exact)) {
-			query.where["value"] = value_exact;
-		}
-
-		// Value type filter
-		if (value && ["positive", "negative"].includes(value)) {
-			query.where["value_type"] = value;
-		}
-
-		// Type filter
-		if (type && type !== "") {
-			query.where["type"] = type;
-		}
-
+	async accountExtract(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		try {
+			const user: User = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
+
+			let {
+				page,			// Pagina atual
+				results,		// Results per page
+				order_type,		// ASC or DESC
+			}: {
+				page?: number,
+				results?: number,
+				order_type?: FindOptionsOrderValue
+			} = req.query;
+
+			const {
+				initialDate,	// Data inicial de consulta
+				finalDate,		// Data final de consulta
+				value_exact,	// Valor exato
+				value,			// negative or positive
+				type			// Transaction type
+			}: {
+				initialDate?: string,
+				finalDate?: string,
+				value_exact?: number,
+				value?: string,
+				type?: string
+			} = req.query;
+
+			page = page || 1;
+			results = results || 20;
+			order_type = order_type	|| "DESC";
+
+			if (!validator.isDate(initialDate) || !validator.isDate(finalDate)) {
+				return ApiResError(1, {
+					title: "Erro na consulta",
+					message: "Dados para consulta não enviados."
+				});
+			}
+
+			const instaceInitialDate = new Date(initialDate);
+			const instaceFinalDate = new Date(finalDate);
+
+			if (instaceInitialDate > instaceFinalDate) {
+				return ApiResError(2, {
+					title: "Erro na consulta",
+					message: "Data inicial maior que a data final."
+				});
+			}
+
+			// Default filter
+			const query: FindManyOptions<Transaction> = {
+				where: {
+					user: { id: user.id },
+					created_at: Raw(alias => `${alias} BETWEEN :initialDate AND :finalDate`, {
+						initialDate: `${initialDate} 00:00:00`,
+						finalDate: `${finalDate} 23:59:59`
+					}),
+					// created_at: Between(initialDate, finalDate)
+				},
+				order: { created_at: order_type },
+				skip: (page - 1) * results,
+				take: results,
+				relations: {
+					transfer: true,
+					withdrawal: true
+				}
+			};
+
+			// Exact value filter
+			if (value_exact && !isNaN(value_exact)) {
+				query.where["value"] = value_exact;
+			}
+
+			// Value type filter
+			if (value && ["positive", "negative"].includes(value)) {
+				query.where["value_type"] = value;
+			}
+
+			// Type filter
+			if (type && type !== "") {
+				query.where["type"] = type;
+			}
+
 			// Get transactions
 			const transactions: Transaction[] = await this.transactionRepo.find(query);
 

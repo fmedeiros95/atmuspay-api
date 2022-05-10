@@ -7,7 +7,7 @@ import { HttpRequest } from "./HttpRequest";
 import { HttpResponse } from "./HttpResponse";
 import { PathVariable } from "./PathVariable";
 import { Persistence } from "./Persistence";
-import { Request } from "./Request";
+import { Method } from "./Method";
 import { RequestBody } from "./RequestBody";
 import { RequestParam } from "./RequestParam";
 import { Server } from "./Server";
@@ -23,7 +23,7 @@ export {
 	InjectRepository,
 	PathVariable,
 	Persistence,
-	Request,
+	Method,
 	RequestBody,
 	RequestParam,
 	Server,

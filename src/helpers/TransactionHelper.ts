@@ -1,7 +1,7 @@
 import { Transaction } from "../entity/Transaction";
 import { Transfer } from "../entity/Transfer";
 import { Withdrawal } from "../entity/Withdrawal";
-import { Helper } from "../lib/decorators";
+import { Helper } from "../_core/decorators";
 
 @Helper()
 export class TransactionHelper {

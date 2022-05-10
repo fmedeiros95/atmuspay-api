@@ -3,7 +3,7 @@ import { RequestOptions } from "../interfaces/RequestOptions";
 import { ServerMetadata } from "../main/Server";
 import { HashMap } from "../map/HashMap";
 
-export function Request(options?: RequestOptions<string>): MethodDecorator {
+export function Method(options?: RequestOptions<string>): MethodDecorator {
 	return <T>(target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<T>) => {
 		const target_name = target.constructor.name;
 		const returnType = Reflect.getMetadata("design:returntype", target, propertyKey);

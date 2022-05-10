@@ -1,6 +1,6 @@
-import { Init } from "../lib/abstracts/Init";
-import { Cron } from "../lib/decorators/Cron";
-import { Task } from "../lib/decorators/Task";
+import { Init } from "../_core/abstracts/Init";
+import { Cron } from "../_core/decorators/Cron";
+import { Task } from "../_core/decorators/Task";
 
 @Cron()
 export class TestCron extends Init {

@@ -2,16 +2,17 @@ import { Bank } from "../entity/Bank";
 import { User } from "../entity/User";
 import { UserAccountBank, UserAccountBankType } from "../entity/UserBankAccount";
 import { UtilsHelper } from "../helpers/UtilsHelper";
-import { Controller, HttpRequest, Inject, InjectRepository, Request } from "../lib/decorators";
-import { RequestMethod } from "../lib/enums/RequestMethod";
+import { Controller, HttpRequest, HttpResponse, Inject, InjectRepository, Method } from "../_core/decorators";
+import { RequestMethod } from "../_core/enums/RequestMethod";
 import { Repository } from "typeorm";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
 import { cpf } from "cpf-cnpj-validator";
+import { checkJwt } from "../middlewares/checkJwt";
+import { Request, Response } from "express";
 
 
 @Controller({
-	path: ["/user/accounts"],
-	authenticated: true
+	path: ["/user/accounts"]
 })
 export class UserAccountController {
 	@Inject() private utilsHelper: UtilsHelper;
@@ -20,11 +21,12 @@ export class UserAccountController {
 	@InjectRepository(User) private userRepo: Repository<User>;
 	@InjectRepository(UserAccountBank) private userAccountBankRepo: Repository<UserAccountBank>;
 
-	@Request({
+	@Method({
 		path: "/",
-		method: RequestMethod.POST
+		method: RequestMethod.POST,
+		middlewares: [ checkJwt ]
 	})
-	async create(@HttpRequest() req): Promise<any> {
+	async create(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		try {
 			const {
 				bank_id, agency, account,
@@ -33,7 +35,7 @@ export class UserAccountController {
 			} = req.body;
 
 			// Get user
-			const user = await this.userRepo.findOneByOrFail({ id: req.getUserId() });
+			const user = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
 
 			// Check if the two factor is active
 			if (user.two_factor && user.two_factor.is_active) {
@@ -149,8 +151,6 @@ export class UserAccountController {
 			return ApiResError(1, {
 				title: "Erro na solicitação",
 				message: "Não foi possivel cadastrar sua conta no momento, tente novamente mais tarde."
-			}, {
-				error: e
 			});
 		}
 	}

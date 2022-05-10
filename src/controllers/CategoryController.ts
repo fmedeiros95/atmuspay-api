@@ -1,11 +1,12 @@
 import { Category } from "../entity/Category";
-import { Controller, HttpRequest, InjectRepository, Request } from "../lib/decorators";
-import { RequestMethod } from "../lib/enums/RequestMethod";
+import { Controller, HttpRequest, InjectRepository, Method } from "../_core/decorators";
+import { RequestMethod } from "../_core/enums/RequestMethod";
 import { Repository } from "typeorm";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
-import { Init } from "../lib/abstracts/Init";
+import { Init } from "../_core/abstracts/Init";
 
 import migrateCategory from "../migrate/category.migrate.json";
+import { Request } from "express";
 
 @Controller({
 	path: ["/category"]
@@ -24,11 +25,11 @@ export class CategoryController implements Init {
 		}
 	}
 
-	@Request({
+	@Method({
 		path: "/",
 		method: RequestMethod.GET
 	})
-	async index(@HttpRequest() req): Promise<any> {
+	async index(): Promise<any> {
 		try {
 			const categories = await this.categoryRepo.find();
 			return ApiResSuccess({

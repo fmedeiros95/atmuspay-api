@@ -1,8 +1,7 @@
-import express from "express";
+import express, { Request } from "express";
 import { Express, IRoute, Response, NextFunction, RequestHandler, Router } from "express";
 import { createServer, Server } from "http";
 import { DataSource } from "typeorm";
-import jwt from "jsonwebtoken";
 
 import { CommandLine } from "./Command";
 import { getFromInjectionChain, processInjectionChain } from "./Injection";
@@ -13,6 +12,7 @@ import { MappingMetadata, MappingParameter } from "../interfaces/Mapping";
 import { ServerOptions, ServerStatic } from "../interfaces/Server";
 import { ControllerMetadata } from "../interfaces/ControllerMetadata";
 import { HashMap } from "../map/HashMap";
+import { checkJwt } from "../../middlewares/checkJwt";
 
 
 export let AppDataSource: DataSource;
@@ -45,8 +45,8 @@ export function createServerAndListen(options: ServerOptions) {
 					handleControllers(value, method);
 				});
 
-				if (value.options.authenticated) {
-					appRouter.use(value.options.path, jwtAuth, value.app);
+				if (value.options.middlewares && value.options.middlewares.length > 0) {
+					appRouter.use(value.options.path, value.options.middlewares, value.app);
 				} else {
 					appRouter.use(value.options.path, value.app);
 				}
@@ -66,24 +66,6 @@ export function createServerAndListen(options: ServerOptions) {
 	});
 }
 
-const jwtAuth = (req, res, next) => {
-	const authorization: string = req.headers["x-access-token"] || req.headers["authorization"] || req.headers["Authorization"];
-	jwt.verify(authorization, CommandLine.token, (err, decoded: any) => {
-		if (err) {
-			return res.status(HttpStatus.UNAUTHORIZED).json({
-				messageCode: HttpStatus.UNAUTHORIZED,
-				message: {
-					title: "Token inválido",
-					message: "Seu token de acesso não e válido, provavelmente ele esta expirado ou sua senha foi alterada."
-				}
-			});
-		} else {
-			req.getUserId = () => decoded.id;
-			next();
-		}
-	});
-};
-
 
 function connectDatabase(keepConnection: boolean): Promise<DataSource> {
 	if (keepConnection) {
@@ -94,14 +76,22 @@ function connectDatabase(keepConnection: boolean): Promise<DataSource> {
 	return AppDataSource.initialize();
 }
 
-function getExpressMatchingMethod<T>(route: IRoute, method: RequestMethod, ...handlers: RequestHandler[]): IRoute {
+function getExpressMatchingMethod<T>(route: IRoute, method: RequestMethod, middlewares: any[], ...handlers: RequestHandler[]): IRoute {
+	const args = [];
+	if (middlewares && middlewares.length > 0) {
+		args.push(middlewares);
+	}
+	args.push(...handlers);
+
+	// Set the matching method
 	switch (method) {
-		case RequestMethod.GET:		return route.get(handlers);
-		case RequestMethod.POST:	return route.post(handlers);
-		case RequestMethod.PUT:		return route.put(handlers);
-		case RequestMethod.DELETE:	return route.delete(handlers);
-		case RequestMethod.ALL:		return route.all(handlers);
-		default:					return route.get(handlers);
+		case RequestMethod.GET: return route.get(...args);
+		case RequestMethod.POST: return route.post(...args);
+		case RequestMethod.PUT: return route.put(...args);
+		case RequestMethod.DELETE: return route.delete(...args);
+		case RequestMethod.OPTIONS: return route.options(...args);
+		case RequestMethod.ALL: return route.all(...args);
+		default: return route.all(...args);
 	}
 }
 
@@ -111,44 +101,39 @@ function handleControllers<T>(controllerMeta: ControllerMetadata<T>, meta: Mappi
 	}), meta.options);
 	options.path = options.path == "" || options.path == undefined ? "/" : options.path;
 
-	getExpressMatchingMethod(controllerMeta.app.route(options.path), options.method, (req: any, res: Response, next: NextFunction) => {
+	getExpressMatchingMethod(controllerMeta.app.route(options.path), options.method, options.middlewares, (req: Request, res: Response): Promise<void> => {
 		const instance: T = getFromInjectionChain(controllerMeta.type);
 
 		const method = instance[meta.property];
 		const parameters: MappingParameter[] = meta.parameters;
 
 		const promiseArr = [];
-		Object.keys(req.params).forEach((name) => {
-			controllerMeta.params.get(name).ifPresent((metaParam) => {
+		Object.keys(req.params).forEach(name => {
+			controllerMeta.params.get(name).ifPresent((metaParam: MappingMetadata) => {
 				const paramMethod = instance[metaParam.property];
 				promiseArr.push(paramMethod.apply(instance, [
 					req.params[name],
 					name
-				]).then((nValue) => {
+				]).then((nValue: any) => {
 					req.params[name] = nValue;
 
 					return nValue;
 				}));
 			});
 		});
+
 		if (promiseArr.length == 0) {
 			promiseArr.push(Promise.resolve({}));
 		}
 
 		return Promise.all(promiseArr).then(() => {
-			const args = parameters.sort((v1, v2) => {
+			const args = parameters.sort((v1: MappingParameter, v2: MappingParameter) => {
 				return v1.index - v2.index;
-			}).map((param) => {
-				const value = param.path.reduce((pv, cv) => {
-					if (pv != undefined) {
-						return pv[cv];
-					}
-
+			}).map((param: MappingParameter) => {
+				const value = param.path.reduce((pv, cv: string) => {
+					if (pv != undefined) return pv[cv];
 					return undefined;
-				}, {
-					req: req,
-					res: res
-				});
+				}, { req, res });
 
 				if (param.decorator == "RequestBody") {
 					return Object.assign(new param.type(), value);
@@ -163,13 +148,12 @@ function handleControllers<T>(controllerMeta: ControllerMetadata<T>, meta: Mappi
 			if (meta.returnTypeName == undefined) {
 				meta.returnTypeName = value.constructor.name;
 			}
-			// console.log(meta.returnTypeName);
 
 			if (options.isFile) {
 				value.then((resp: any) => {
 					res.sendFile(resp);
-				}).catch(err => {
-					const status = err.status != undefined ? err.status : (options.errorCode != undefined ? options.errorCode : 500);
+				}).catch((err: any) => {
+					const status = err.status != undefined ? err.status : (options.errorCode != undefined ? options.errorCode : HttpStatus.INTERNAL_SERVER_ERROR);
 					const error = new HttpError(err.messageCode || status, err.message || err);
 					res.status(status).send(error);
 				});
@@ -179,8 +163,8 @@ function handleControllers<T>(controllerMeta: ControllerMetadata<T>, meta: Mappi
 			if (options.isDownload) {
 				value.then((resp: any) => {
 					res.end(resp);
-				}).catch(err => {
-					const status = err.status != undefined ? err.status : (options.errorCode != undefined ? options.errorCode : 500);
+				}).catch((err: any) => {
+					const status = err.status != undefined ? err.status : (options.errorCode != undefined ? options.errorCode : HttpStatus.INTERNAL_SERVER_ERROR);
 					const error = new HttpError(err.messageCode || status, err.message || err);
 					res.status(status).send(error);
 				});
@@ -189,15 +173,15 @@ function handleControllers<T>(controllerMeta: ControllerMetadata<T>, meta: Mappi
 
 			switch (meta.returnTypeName) {
 				case "Observable": {
-					value.subscribe((value) => {
+					value.subscribe((value: any) => {
 						res.json(value);
 					});
 					break;
 				}
 				case "Promise": {
-					value.then((value) => {
+					value.then((value: any) => {
 						res.json(value);
-					}).catch(err => {
+					}).catch((err: any) => {
 						const status: number = err.status != undefined ? err.status : (options.errorCode != undefined ? options.errorCode : HttpStatus.UNPROCESSABLE_ENTITY);
 						const error: HttpError = new HttpError(err.messageCode || status, err.message || err);
 						res.status(status).send(error);
@@ -209,7 +193,7 @@ function handleControllers<T>(controllerMeta: ControllerMetadata<T>, meta: Mappi
 					return;
 				}
 			}
-		}).catch((err) => {
+		}).catch(err => {
 			res.status(err.status != undefined ? err.status : HttpStatus.INTERNAL_SERVER_ERROR).send(err);
 		});
 	});

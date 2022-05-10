@@ -1,15 +1,16 @@
 import { User } from "../entity/User";
 import { UserToken, UserTokenType } from "../entity/UserToken";
 import { UtilsHelper } from "../helpers/UtilsHelper";
-import { Controller, HttpRequest, Inject, InjectRepository, PathVariable, Request } from "../lib/decorators";
-import { RequestMethod } from "../lib/enums/RequestMethod";
+import { Controller, HttpRequest, Inject, InjectRepository, PathVariable, Method, HttpResponse } from "../_core/decorators";
+import { RequestMethod } from "../_core/enums/RequestMethod";
 import { Repository } from "typeorm";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
 import validator from "validator";
+import { checkJwt } from "../middlewares/checkJwt";
+import { Request, Response } from "express";
 
 @Controller({
-	path: ["/user/api-token"],
-	authenticated: true
+	path: ["/user/api-token"]
 })
 export class UserApiController {
 	@Inject() private utilsHelper: UtilsHelper;
@@ -17,17 +18,16 @@ export class UserApiController {
 	@InjectRepository(User) private userRepo: Repository<User>;
 	@InjectRepository(UserToken) private userToken: Repository<UserToken>;
 
-	@Request({
+	@Method({
 		path: "/",
-		method: RequestMethod.GET
+		method: RequestMethod.GET,
+		middlewares: [ checkJwt ]
 	})
-	async get(@HttpRequest() req): Promise<any> {
-		const user: User = await this.userRepo.findOneBy({ id: req.getUserId() });
+	async get(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
+		const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
 
-		const apiTokens: UserToken[] = await this.userToken.find({
-			where: {
-				user: { id: user.id }
-			}
+		const apiTokens: UserToken[] = await this.userToken.findBy({
+			user: { id: user.id }
 		});
 
 		return ApiResSuccess({
@@ -48,11 +48,12 @@ export class UserApiController {
 		});
 	}
 
-	@Request({
+	@Method({
 		path: "/",
-		method: RequestMethod.POST
+		method: RequestMethod.POST,
+		middlewares: [ checkJwt ]
 	})
-	async create(@HttpRequest() req): Promise<any> {
+	async create(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		const {
 			code_2fa,
 			api_token
@@ -76,7 +77,7 @@ export class UserApiController {
 
 		// Get user
 		const user: User = await this.userRepo.findOne({
-			where: { id: req.getUserId() },
+			where: { id: res.locals.jwtPayload.id },
 			relations: { two_factor: true }
 		});
 
@@ -160,18 +161,19 @@ export class UserApiController {
 
 	}
 
-	@Request({
+	@Method({
 		path: "/:tokenId",
-		method: RequestMethod.DELETE
+		method: RequestMethod.DELETE,
+		middlewares: [ checkJwt ]
 	})
-	async delete(@HttpRequest() req, @PathVariable("tokenId") tokenId: string): Promise<any> {
+	async delete(@HttpRequest() req: Request, @HttpResponse() res: Response, @PathVariable("tokenId") tokenId: string): Promise<any> {
 		const { code_2fa }: {
-			code_2fa: string
+			code_2fa?: string
 		} = req.query;
 
 		// Get user
 		const user: User = await this.userRepo.findOne({
-			where: { id: req.getUserId() },
+			where: { id: res.locals.jwtPayload.id },
 			relations: { two_factor: true }
 		});
 
@@ -214,11 +216,12 @@ export class UserApiController {
 		}
 	}
 
-	@Request({
+	@Method({
 		path: "/:tokenId",
-		method: RequestMethod.PUT
+		method: RequestMethod.PUT,
+		middlewares: [ checkJwt ]
 	})
-	async update(@HttpRequest() req, @PathVariable("tokenId") tokenId: string): Promise<any> {
+	async update(@HttpRequest() req: Request, @HttpResponse() res: Response, @PathVariable("tokenId") tokenId: string): Promise<any> {
 		const {
 			code_2fa,
 			api_token
@@ -242,7 +245,7 @@ export class UserApiController {
 
 		// Get user
 		const user: User = await this.userRepo.findOne({
-			where: { id: req.getUserId() },
+			where: { id: res.locals.jwtPayload.id },
 			relations: { two_factor: true }
 		});
 

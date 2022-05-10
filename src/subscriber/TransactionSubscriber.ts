@@ -1,4 +1,4 @@
-import { AppDataSource } from "../lib/main/Server";
+import { AppDataSource } from "../_core/main/Server";
 import {
 	EntitySubscriberInterface,
 	EventSubscriber,

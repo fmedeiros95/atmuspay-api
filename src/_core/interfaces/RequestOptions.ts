@@ -5,7 +5,7 @@ export interface RequestOptions<T> {
 	path?: T,
 	method?: RequestMethod,
 	errorCode?: HttpStatus,
-	authenticated?: boolean,
+	middlewares?: any[],
 	isFile?: boolean,
 	isDownload?: boolean
 }

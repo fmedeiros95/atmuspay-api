@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { Helper } from "../lib/decorators";
+import { Helper } from "../_core/decorators";
 
 @Helper()
 export class HttpHelper {

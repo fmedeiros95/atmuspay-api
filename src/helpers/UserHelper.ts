@@ -1,6 +1,6 @@
 import { UserAccountBank } from "entity/UserBankAccount";
 import { User } from "../entity/User";
-import { Helper } from "../lib/decorators";
+import { Helper } from "../_core/decorators";
 
 @Helper()
 export class UserHelper {

@@ -11,7 +11,7 @@ const getDefaultOptions = <T>(path: T): RequestOptions<T> => ({
 	path: path,
 	method: RequestMethod.GET,
 	errorCode: 422,
-	authenticated: false
+	middlewares: []
 });
 
 export function Controller(options?: RequestOptions<string[]>): TypeDecorator {

@@ -4,8 +4,8 @@ import cors from "cors";
 import fileUpload from "express-fileupload";
 
 // Core
-import { Init } from "./lib/abstracts/Init";
-import { Server } from "./lib/decorators";
+import { Init } from "./_core/abstracts/Init";
+import { Server } from "./_core/decorators";
 
 // Controllers
 import { BanksController } from "./controllers/BanksController";
@@ -18,7 +18,6 @@ import { UserFinanceController } from "./controllers/UserFinanceController";
 import { UserTwoFactorController } from "./controllers/UserTwoFactorController";
 import { UserValidationController } from "./controllers/UserValidationController";
 import { UserController } from "./controllers/UserController";
-import { UserAuthController } from "./controllers/UserAuthController";
 
 // Helpers
 import { HttpHelper } from "./helpers/HttpHelper";
@@ -43,11 +42,10 @@ import { Config, SystemParams } from "./config";
 		UserFinanceController,
 		UserTwoFactorController,
 		UserValidationController,
-		UserController,
-		UserAuthController
+		UserController
 	],
 	cron: [
-		// TestCron
+		TestCron
 	],
 	helpers: [
 		HttpHelper,

@@ -4,7 +4,6 @@ import { Type } from "../interfaces/Type";
 import { InjectMetadata } from "../interfaces/InjectMetadata";
 import { HashMap } from "../map/HashMap";
 import { AppDataSource } from "./Server";
-import { getConnectionManager } from "typeorm";
 
 export const InjectionChain: Map<any> = new HashMap<any>();
 export const InjectionMetadata: Map<InjectMetadata> = new HashMap<InjectMetadata>();

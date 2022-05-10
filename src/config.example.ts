@@ -1,5 +1,5 @@
 import path from "path";
-import { ServerConfig } from "./lib/interfaces/Server";
+import { ServerConfig } from "./_core/interfaces/Server";
 
 export const SystemParams = {
 	app: {

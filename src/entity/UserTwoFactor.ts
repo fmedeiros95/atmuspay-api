@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
-import { EntityBase } from "../lib/abstracts/EntityBase";
+import { EntityBase } from "../_core/abstracts/EntityBase";
 import { User } from "./User";
 
 export enum UserTwoFactorType {

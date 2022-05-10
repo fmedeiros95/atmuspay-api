@@ -1,9 +1,9 @@
 import { Repository } from "typeorm";
-import { Controller, InjectRepository, Request } from "../lib/decorators";
-import { RequestMethod } from "../lib/enums/RequestMethod";
+import { Controller, InjectRepository, Method } from "../_core/decorators";
+import { RequestMethod } from "../_core/enums/RequestMethod";
 import { Bank } from "../entity/Bank";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
-import { Init } from "../lib/abstracts/Init";
+import { Init } from "../_core/abstracts/Init";
 
 import migrateBank from "../migrate/bank.migrate.json";
 
@@ -24,7 +24,7 @@ export class BanksController implements Init {
 		}
 	}
 
-	@Request({
+	@Method({
 		path: "/",
 		method: RequestMethod.GET
 	})

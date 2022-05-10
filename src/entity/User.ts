@@ -1,5 +1,5 @@
 import { Column, Entity, Generated, JoinColumn, OneToMany, OneToOne } from "typeorm";
-import { EntityBase } from "../lib/abstracts/EntityBase";
+import { EntityBase } from "../_core/abstracts/EntityBase";
 import {
 	compare as bcryptCompare,
 	hash as bcryptHash
@@ -92,6 +92,12 @@ export class User extends EntityBase {
 
 	@Column({ default: false })
 	phone_verified: boolean;
+
+	@Column({ default: false })
+	is_admin: boolean;
+
+	@Column("json", { default: [] })
+	admin_roles: string[];
 
 	@Column({ default: false })
 	is_emancipated: boolean;

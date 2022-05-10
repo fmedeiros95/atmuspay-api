@@ -1,8 +1,8 @@
 import jsonwebtoken from "jsonwebtoken";
 import * as twoFactor from "node-2fa";
 
-import { Helper } from "../lib/decorators";
-import { CommandLine } from "../lib/main/Command";
+import { Helper } from "../_core/decorators";
+import { CommandLine } from "../_core/main/Command";
 import { User } from "../entity/User";
 import { SystemParams } from "../config";
 
