@@ -7,7 +7,6 @@ import {
 import { UserBalance } from "./UserBalance";
 import { UserAddress } from "./UserAddress";
 import { Transaction } from "./Transaction";
-import { Category } from "./Category";
 import { UserAccountBank } from "./UserBankAccount";
 import { Transfer } from "./Transfer";
 import { Withdrawal } from "./Withdrawal";

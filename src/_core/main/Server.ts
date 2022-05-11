@@ -1,8 +1,7 @@
 import express, { Request } from "express";
-import { Express, IRoute, Response, NextFunction, RequestHandler, Router } from "express";
+import { Express, IRoute, Response, RequestHandler, Router } from "express";
 import { createServer, Server } from "http";
 import { DataSource } from "typeorm";
-
 import { CommandLine } from "./Command";
 import { getFromInjectionChain, processInjectionChain } from "./Injection";
 import { Map } from "../abstracts/Map";
@@ -12,8 +11,6 @@ import { MappingMetadata, MappingParameter } from "../interfaces/Mapping";
 import { ServerOptions, ServerStatic } from "../interfaces/Server";
 import { ControllerMetadata } from "../interfaces/ControllerMetadata";
 import { HashMap } from "../map/HashMap";
-import { checkJwt } from "../../middlewares/checkJwt";
-
 
 export let AppDataSource: DataSource;
 export const ServerMetadata: Map<ControllerMetadata<any>> = new HashMap<ControllerMetadata<any>>();
@@ -23,7 +20,7 @@ export function createServerAndListen(options: ServerOptions) {
 		AppDataSource = new DataSource(CommandLine.connection);
 	}
 
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		connectDatabase(keepConnection).then(() => {
 			processInjectionChain();
 
@@ -56,7 +53,7 @@ export function createServerAndListen(options: ServerOptions) {
 				// Create the HTTP server
 				const httpServer: Server = createServer(AppServer);
 				httpServer.listen(CommandLine.port, () => {
-					resolve({});
+					resolve(httpServer);
 				});
 			});
 		}).catch((error) => {

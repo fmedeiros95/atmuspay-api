@@ -9,7 +9,6 @@ import { Server } from "./_core/decorators";
 
 // Controllers
 import { BanksController } from "./controllers/BanksController";
-import { CategoryController } from "./controllers/CategoryController";
 import { DataController } from "./controllers/DataController";
 import { LoginController } from "./controllers/LoginController";
 import { UserAccountController } from "./controllers/UserAccountController";
@@ -34,7 +33,6 @@ import { Config, SystemParams } from "./config";
 @Server({
 	controllers: [
 		BanksController,
-		CategoryController,
 		DataController,
 		LoginController,
 		UserAccountController,
@@ -54,10 +52,7 @@ import { Config, SystemParams } from "./config";
 		UtilsHelper
 	],
 	use: [
-		cors({
-			origin: true,
-			credentials: true
-		}),
+		cors({ origin: true, credentials: true }),
 		bodyParser.urlencoded({ extended: true }),
 		bodyParser.json(),
 		fileUpload()
