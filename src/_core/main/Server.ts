@@ -34,7 +34,7 @@ export function createServerAndListen(options: ServerOptions) {
 				});
 			}
 
-			const appPrefix = "/api/v1";
+			const appPrefix = "/v1";
 
 			ServerMetadata.forEachAsync((key, value) => {
 				value.app = Router({ mergeParams: true });

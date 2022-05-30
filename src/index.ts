@@ -9,6 +9,7 @@ import { Server } from "./_core/decorators";
 
 // Controllers
 import { BanksController } from "./controllers/BanksController";
+import { ConfigController } from "./controllers/ConfigController";
 import { DataController } from "./controllers/DataController";
 import { LoginController } from "./controllers/LoginController";
 import { UserAccountController } from "./controllers/UserAccountController";
@@ -19,6 +20,7 @@ import { UserValidationController } from "./controllers/UserValidationController
 import { UserController } from "./controllers/UserController";
 
 // Helpers
+import { AsaasHelper } from "./helpers/AsaasHelper";
 import { HttpHelper } from "./helpers/HttpHelper";
 import { TransactionHelper } from "./helpers/TransactionHelper";
 import { UserHelper } from "./helpers/UserHelper";
@@ -33,6 +35,7 @@ import { Config, SystemParams } from "./config";
 @Server({
 	controllers: [
 		BanksController,
+		ConfigController,
 		DataController,
 		LoginController,
 		UserAccountController,
@@ -43,9 +46,10 @@ import { Config, SystemParams } from "./config";
 		UserController
 	],
 	cron: [
-		TestCron
+		// TestCron
 	],
 	helpers: [
+		AsaasHelper,
 		HttpHelper,
 		TransactionHelper,
 		UserHelper,

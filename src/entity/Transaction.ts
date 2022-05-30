@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
-import { EntityBase } from "../_core/abstracts/EntityBase";
+import { EntityBase } from "../utils/EntityBase";
 import { Transfer } from "./Transfer";
 import { User } from "./User";
 import { Withdrawal } from "./Withdrawal";
@@ -27,11 +27,6 @@ export enum TransactionType {
 	DEBIT_RATE_TICKET_RECHARGE = "debit.rate.ticket.recharge",
 }
 
-export enum TransactionValueType {
-	POSITIVE = "positive",
-	NEGATIVE = "negative"
-}
-
 @Entity()
 export class Transaction extends EntityBase {
 	@Column("enum", { enum: TransactionType, nullable: true })
@@ -48,11 +43,6 @@ export class Transaction extends EntityBase {
 
 	@Column()
 	value: number;
-
-	@Column("enum", {
-		enum: TransactionValueType
-	})
-	value_type: TransactionValueType;
 
 	@Column({ nullable: true })
 	description: string;

@@ -1,5 +1,5 @@
 import { Column, Entity, OneToOne } from "typeorm";
-import { EntityBase } from "../_core/abstracts/EntityBase";
+import { EntityBase } from "../utils/EntityBase";
 
 @Entity()
 export class Bank extends EntityBase {

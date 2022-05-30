@@ -13,8 +13,6 @@ export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
 		jwtPayload = <any>jwt.verify(token, CommandLine.token);
 		res.locals.jwtPayload = jwtPayload;
 	} catch (error) {
-		console.error("Invalid JWT token: ", error);
-
 		// If token is not valid, respond with 401 (unauthorized)
 		res.status(HttpStatus.UNAUTHORIZED).json({
 			messageCode: HttpStatus.UNAUTHORIZED,

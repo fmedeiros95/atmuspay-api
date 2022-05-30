@@ -1,10 +1,8 @@
 import { AppDataSource } from "../_core/main/Server";
 import { EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent } from "typeorm";
 
-import { Transaction, TransactionStatus, TransactionType, TransactionValueType } from "../entity/Transaction";
+import { Transaction, TransactionStatus, TransactionType } from "../entity/Transaction";
 import { Transfer } from "../entity/Transfer";
-import { UserAddress } from "../entity/UserAddress";
-import { UserBalance } from "../entity/UserBalance";
 
 @EventSubscriber()
 export class TransferSubscriber implements EntitySubscriberInterface {
@@ -19,8 +17,7 @@ export class TransferSubscriber implements EntitySubscriberInterface {
 			user: transfer.send_from,
 			type: TransactionType.TRANSFER_TO_USER,
 			status: TransactionStatus.PROCESSED,
-			value: transfer.value,
-			value_type: TransactionValueType.NEGATIVE,
+			value: -transfer.value,
 			balance: transfer.send_from.balance.balance,
 			transfer
 		});
@@ -31,7 +28,6 @@ export class TransferSubscriber implements EntitySubscriberInterface {
 			type: TransactionType.TRANSFER_FROM_USER,
 			status: TransactionStatus.PROCESSED,
 			value: transfer.value,
-			value_type: TransactionValueType.POSITIVE,
 			balance: transfer.send_to.balance.balance,
 			transfer
 		});

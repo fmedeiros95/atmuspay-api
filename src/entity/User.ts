@@ -1,9 +1,6 @@
-import { Column, Entity, Generated, JoinColumn, OneToMany, OneToOne } from "typeorm";
-import { EntityBase } from "../_core/abstracts/EntityBase";
-import {
-	compare as bcryptCompare,
-	hash as bcryptHash
-} from "bcrypt";
+import { Column, Entity, OneToMany, OneToOne } from "typeorm";
+import { EntityBase } from "../utils/EntityBase";
+import * as bcrypt from "bcryptjs";
 import { UserBalance } from "./UserBalance";
 import { UserAddress } from "./UserAddress";
 import { Transaction } from "./Transaction";
@@ -35,6 +32,12 @@ export class User extends EntityBase {
 
 	@Column({ nullable: true })
 	password_last_change_at: Date;
+
+	@Column({ nullable: true })
+	password_token_reset: string;
+
+	@Column({ nullable: true })
+	password_last_email_at: Date;
 
 	@Column()
 	name: string;
@@ -177,11 +180,11 @@ export class User extends EntityBase {
 		return obj;
 	}
 
-	static hashPassword(password: string, salt = 10): Promise<string> {
-		return bcryptHash(password, salt);
+	hashPassword() {
+		this.password = bcrypt.hashSync(this.password, 8);
 	}
 
-	checkPassword(password: string): Promise<boolean> {
-		return bcryptCompare(password, this.password);
+	checkPassword(unencryptedPassword: string) {
+		return bcrypt.compareSync(unencryptedPassword, this.password);
 	}
 }

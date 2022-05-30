@@ -24,12 +24,14 @@ export class LoginController {
 		try {
 			const {
 				username,
-				password
+				password,
+				platform,
+				type,
+				token_life_time
 			}: IUserLogin = req.body;
 
-
 			// Validar formulário
-			if (!username || !password) {
+			if (!(username && password && platform && type && token_life_time)) {
 				return ApiResError(2, {
 					title: "Erro no login",
 					message: "Dados para login não enviados."
@@ -67,8 +69,14 @@ export class LoginController {
 			}
 
 			// Generate token
-			const token: string = this.utilsHelper.createJWT(user.id, {
-				expiresIn: "1d"
+			const token: string = this.utilsHelper.createJWT({
+				id: user.id,
+				ip: req.ip,
+				isAdmin: user.is_admin,
+				platform,
+				typeLogin: type
+			}, {
+				expiresIn: `${token_life_time}m`
 			});
 
 			// Reset failLogin

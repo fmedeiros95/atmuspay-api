@@ -12,8 +12,8 @@ export class UtilsHelper {
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 
-	public createJWT(id: string | number, options?: any): string {
-		return jsonwebtoken.sign({ id }, CommandLine.token, {
+	public createJWT(data: any, options?: any): string {
+		return jsonwebtoken.sign(data, CommandLine.token, {
 			expiresIn: options?.expiresIn || CommandLine.jwtExpiresIn
 		});
 	}

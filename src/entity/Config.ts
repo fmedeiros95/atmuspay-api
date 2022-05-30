@@ -1,9 +1,8 @@
-import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
+import { Column, Entity } from "typeorm";
 import { EntityBase } from "../utils/EntityBase";
-import { User } from "./User";
 
 @Entity()
-export class UserConfig extends EntityBase {
+export class Config extends EntityBase {
 	@Column({ default: 390 })
 	monthly_payment_default_value: number;
 
@@ -27,8 +26,4 @@ export class UserConfig extends EntityBase {
 
 	@Column({ default: 1000 })
 	withdrawal_bank_third_default_rate: number;
-
-	@OneToOne(() => User, user => user.config)
-	@JoinColumn({ name: "user_id" })
-	user: User;
 }

@@ -1,14 +1,14 @@
 import validator from "validator";
-import { FindManyOptions, FindOptionsOrderValue, Raw, Repository } from "typeorm";
+import { FindManyOptions, FindOptionsOrderValue, LessThan, MoreThan, Raw, Repository } from "typeorm";
 import { User } from "../entity/User";
 import { Controller, HttpRequest, HttpResponse, Inject, InjectRepository, Method } from "../_core/decorators";
 import { RequestMethod } from "../_core/enums/RequestMethod";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
-import { Transaction } from "../entity/Transaction";
+import { Transaction, TransactionType } from "../entity/Transaction";
 import { Transfer } from "../entity/Transfer";
 import { TransactionHelper } from "../helpers/TransactionHelper";
 import { UtilsHelper } from "../helpers/UtilsHelper";
-import { checkJwt } from "../middlewares/checkJwt";
+import { checkJwt, check2FA } from "../middlewares";
 import { Request, Response } from "express";
 
 @Controller({
@@ -25,18 +25,17 @@ export class UserFinanceController {
 	@Method({
 		path: "/new-transfer",
 		method: RequestMethod.POST,
-		middlewares: [ checkJwt ]
+		middlewares: [ checkJwt, check2FA ]
 	})
 	async newTransfer(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		try {
 			const {
-				code_2fa,
 				to_user_id,
 				value
 			} = req.body;
 			const fixedValue: number = Math.round(value);
 
-			if (!code_2fa || !to_user_id || !value) {
+			if (!(to_user_id && value)) {
 				return ApiResError(2, {
 					title: "Erro na solicitação",
 					message: "Parâmetros não enviados."
@@ -46,76 +45,57 @@ export class UserFinanceController {
 			// Get user
 			const user: User = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
 
-			// Check 2FA
-			if (user.two_factor && user.two_factor.is_active) {
-				const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(user.two_factor.secret, code_2fa || "");
-				if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
-					return ApiResError(7, {
-						title: "Erro na solicitação",
-						message: "Código de 2FA inválido."
-					});
-				}
-			}
-
-
+			// Is a valid UUID
 			if (validator.isUUID(to_user_id) === false) {
-				return ApiResError(2, {
+				return ApiResError(3, {
 					title: "Erro na solicitação",
 					message: "Usuário não encontrado."
 				});
 			}
 
 			if (isNaN(fixedValue) || fixedValue <= 0) {
-				return ApiResError(3, {
+				return ApiResError(4, {
 					title: "Erro na solicitação",
 					message: "Valor inválido."
 				});
 			}
 
 			if (user.id === to_user_id) {
-				return ApiResError(4, {
+				return ApiResError(5, {
 					title: "Erro na solicitação",
 					message: "Você não pode transferir para você mesmo."
 				});
 			}
 
 			if (user.balance.balance < fixedValue) {
-				return ApiResError(5, {
-					title: "Erro na solicitação",
-					message: "Saldo insuficiente."
-				});
-			}
-
-			const toUser: User = await this.userRepo.findOneOrFail({
-				where: { id: to_user_id },
-				relations: {
-					balance: true
-				}
-			});
-			if (!toUser) {
 				return ApiResError(6, {
 					title: "Erro na solicitação",
-					message: "Usuário não encontrado."
+					message: "Seu saldo é insuficiente."
 				});
 			}
 
-			// TODO: Implementar a transferência
+			// Get user to transfer
+			const toUser: User = await this.userRepo.findOneByOrFail({ id: to_user_id });
+
+			// Create transfer
 			const transfer: Transfer = await this.transferRepo.save({
 				send_from: user,
 				send_to: toUser,
 				value: fixedValue
 			});
 
+			// Sleep to wait for the transfer to be created
 			await this.utilsHelper.sleep(1000);
 
+			// Get related transaction
 			const transaction: Transaction = await this.transactionRepo.findOne({
 				where: {
+					user: { id: user.id },
 					transfer: { id: transfer.id }
 				},
 				relations: {
 					transfer: true,
-					withdrawal: true,
-					user: true
+					withdrawal: true
 				}
 			});
 
@@ -163,7 +143,7 @@ export class UserFinanceController {
 				finalDate?: string,
 				value_exact?: number,
 				value?: string,
-				type?: string
+				type?: TransactionType
 			} = req.query;
 
 			page = page || 1;
@@ -194,8 +174,7 @@ export class UserFinanceController {
 					created_at: Raw(alias => `${alias} BETWEEN :initialDate AND :finalDate`, {
 						initialDate: `${initialDate} 00:00:00`,
 						finalDate: `${finalDate} 23:59:59`
-					}),
-					// created_at: Between(initialDate, finalDate)
+					})
 				},
 				order: { created_at: order_type },
 				skip: (page - 1) * results,
@@ -208,16 +187,28 @@ export class UserFinanceController {
 
 			// Exact value filter
 			if (value_exact && !isNaN(value_exact)) {
-				query.where["value"] = value_exact;
-			}
-
-			// Value type filter
-			if (value && ["positive", "negative"].includes(value)) {
-				query.where["value_type"] = value;
+				// With value type filter
+				if (value && ["positive", "negative"].includes(value)) {
+					if (value === "positive") {
+						query.where["value"] = Raw(alias => `${alias} = :value`, { value: Math.abs(value_exact) });
+					} else {
+						query.where["value"] = Raw(alias => `${alias} = :value`, { value: -Math.abs(value_exact) });
+					}
+				} else {
+					query.where["value"] = Raw(alias => `${alias} = :valuePositive OR ${alias} = :valueNegative`, {
+						valuePositive: Math.abs(value_exact),
+						valueNegative: -Math.abs(value_exact)
+					});
+				}
+			} else {
+				// Value type filter
+				if (value && ["positive", "negative"].includes(value)) {
+					query.where["value"] = value === "positive" ? MoreThan(0) : LessThan(0);
+				}
 			}
 
 			// Type filter
-			if (type && type !== "") {
+			if (type && Object.values(TransactionType).includes(type)) {
 				query.where["type"] = type;
 			}
 
@@ -225,13 +216,11 @@ export class UserFinanceController {
 			const transactions: Transaction[] = await this.transactionRepo.find(query);
 
 			// Get total with filter
-			const totalResults: number = await this.transactionRepo.count({
-				where: { ...query.where }
-			});
+			const totalResults: number = await this.transactionRepo.countBy({ ...query.where });
 
 			// Sum transactions value on this page
 			const totalValue: number = transactions.reduce((accumulator, transaction) => {
-				return accumulator + transaction.value;
+				return accumulator + Math.abs(transaction.value);
 			}, 0);
 
 			// Response
@@ -243,12 +232,11 @@ export class UserFinanceController {
 				list: transactions.map(transaction => this.transactionHelper.publicData(transaction)),
 				pageNumbers: Math.ceil(totalResults / results)
 			});
-		} catch (e) {
-			console.error(e);
+		} catch (error) {
 			return ApiResError(3, {
 				title: "Erro na consulta",
 				message: "Ocorreu um erro ao tentar consultar o extrato. Tente novamente mais tarde."
-			});
+			}, { error });
 		}
 	}
 }

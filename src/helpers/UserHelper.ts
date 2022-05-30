@@ -4,15 +4,19 @@ import { Helper } from "../_core/decorators";
 
 @Helper()
 export class UserHelper {
-	maskEmail(email: string): string {
+	maskEmail(email: string): string | null {
+		if (!email) return null;
+
 		// Email mask ema****@example.com
 		const [ username, host ] = email.split("@");
 		return username.slice(0, 3) + "*".repeat(4) + "@" + host;
 	}
 
 	maskPhone(phone: string): string | null {
+		if (!phone) return null;
+
 		// Phone mask 55****3572
-		return phone ? phone.substring(0, 2) + "*".repeat(4) + phone.slice(-4) : null;
+		return phone.substring(0, 2) + "*".repeat(4) + phone.slice(-4);
 	}
 
 	publicData(user: User): any {
@@ -38,14 +42,13 @@ export class UserHelper {
 			},
 			withdrawal_bank: {
 				is_active: true,
+				third_enabled: false,
 				custom_rate: false,
 				rate: 3390,
 				custom_third_rate: false,
 				third_rate: 4890,
 				custom_limit: false,
 				limit: 1234,
-				third_enabled: false,
-				automatic_credit_input_bank: true,
 				custom_min_value: false,
 				min_value: 1000
 			},
@@ -53,10 +56,6 @@ export class UserHelper {
 				custom_payment: false,
 				value: 0,
 				pending_value: 0
-			},
-			whitelabel: {
-				is_active: false,
-				whitelabel: null
 			},
 			admin: {
 				is_active: false,
@@ -109,8 +108,7 @@ export class UserHelper {
 			user: user.username,
 			name: user.name,
 			accounts: user.accounts.map(account => this.accountPrivateData(account)),
-			created_at: user.created_at,
-			sessions: []
+			created_at: user.created_at
 		};
 
 		if (!user.avatar) delete userData.images.profile.profile;

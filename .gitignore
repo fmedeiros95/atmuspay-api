@@ -49,8 +49,8 @@ package-lock.json
 .DS_Store
 Thumbs.db
 
-
 # Others
 config.ts
-/src/uploads/documents/*
+/src/uploads/*
+/src/uploads/validation/*
 /src/uploads/profile/*

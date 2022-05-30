@@ -1,4 +1,4 @@
-import { EntityBase } from "../_core/abstracts/EntityBase";
+import { EntityBase } from "../utils/EntityBase";
 import { Column, Entity, Generated, JoinColumn, ManyToOne } from "typeorm";
 import { User } from "./User";
 

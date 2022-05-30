@@ -8,18 +8,20 @@ import { ApiResError, ApiResSuccess } from "../utils/Response";
 import path from "path";
 import { Config, SystemParams } from "../config";
 import { UtilsHelper } from "../helpers/UtilsHelper";
-import { checkJwt } from "../middlewares/checkJwt";
 import { Request, Response } from "express";
 import { UserHelper } from "../helpers/UserHelper";
 import { differenceInYears } from "date-fns";
 import { UploadedFile } from "express-fileupload";
 import { MD5 } from "crypto-js";
 import { MailService } from "../utils/MailService";
+import { check2FA, checkJwt, resetPassword } from "../middlewares";
+import { AsaasHelper } from "../helpers/AsaasHelper";
 
 @Controller({
 	path: ["/user"]
 })
 export class UserController {
+	@Inject() private asaasHelper: AsaasHelper;
 	@Inject() private userHelper: UserHelper;
 	@Inject() private utilsHelper: UtilsHelper;
 
@@ -40,6 +42,10 @@ export class UserController {
 		middlewares: [ checkJwt ]
 	})
 	async get(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
+		this.asaasHelper.settings.setEnvironment(SystemParams.asaas.env);
+		this.asaasHelper.settings.setAccessToken(SystemParams.asaas.token);
+
+
 		try {
 			// Get user
 			const user: User = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
@@ -68,7 +74,7 @@ export class UserController {
 		path: "/",
 		method: RequestMethod.POST
 	})
-	async create(@HttpRequest() req): Promise<any> {
+	async create(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		try {
 			let {
 				username,
@@ -177,14 +183,19 @@ export class UserController {
 			}
 
 			// Create user
-			await this.userRepo.save({
-				name,
-				email,
-				email_code: this.utilsHelper.randomCode(6, true),
-				email_code_send_at: new Date(),
-				username,
-				password: await User.hashPassword(password)
-			});
+			const user: User = new User();
+			user.name = name;
+			user.email = email;
+			user.email_code = this.utilsHelper.randomCode(6, true);
+			user.email_code_send_at = new Date();
+			user.username = username;
+			user.password = password;
+
+			// Hash password
+			user.hashPassword();
+
+			// Save user
+			await this.userRepo.save(user, { listeners: true });
 
 			return ApiResSuccess({
 				title: "Cadastro realizado",
@@ -201,29 +212,16 @@ export class UserController {
 	@Method({
 		path: "/",
 		method: RequestMethod.PUT,
-		middlewares: [ checkJwt ]
+		middlewares: [ checkJwt, check2FA ]
 	})
 	async update(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		try {
 			const {
-				code_2fa, name,
-				birthday, gender
+				name, birthday, gender
 			} = req.body;
 
 			// Get user
 			const user: User = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
-
-			// CHeck if two factor is active
-			if (user.two_factor && user.two_factor.is_active) {
-				// Validate two factor code
-				const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(user.two_factor.secret, code_2fa || "");
-				if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
-					return ApiResError(2, {
-						title: "Erro na criação",
-						message: "Código de 2FA inválido."
-					});
-				}
-			}
 
 			// Check user full name
 			const splitName: string[] = name.split(" ");
@@ -270,42 +268,29 @@ export class UserController {
 				title: "Dados atualizados",
 				message: "Seus dados foram atualizados com sucesso."
 			});
-		} catch (e) {
+		} catch (error) {
+			console.log(error);
 			return ApiResError(1, {
 				title: "Erro na solicitação",
 				message: "Erro ao atualizar os dados, tente novamente mais tarde."
-			});
+			}, { error });
 		}
 	}
 
 	@Method({
 		path: "/address",
 		method: RequestMethod.PUT,
-		middlewares: [ checkJwt ]
+		middlewares: [ checkJwt, check2FA ]
 	})
 	async updateAddress(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		try {
 			const {
-				code_2fa, city, complement, district,
+				city, complement, district,
 				ibge_code, number, state, street, zip_code
 			} = req.body;
 
 			// Get user
 			const user: User = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
-
-			// Check if the two factor is active
-			if (user.two_factor && user.two_factor.is_active) {
-				// Verify 2FA code
-				if (user.two_factor && user.two_factor.is_active) {
-					const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(user.two_factor.secret, code_2fa || "");
-					if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
-						return ApiResError(2, {
-							title: "Erro na criação",
-							message: "Código de 2FA inválido."
-						});
-					}
-				}
-			}
 
 			// Update address
 			user.address.city = city;
@@ -326,38 +311,6 @@ export class UserController {
 			return ApiResError(1, {
 				title: "Erro na solicitação",
 				message: "Não foi possível atualizar o endereço, tente novamente mais tarde."
-			});
-		}
-	}
-
-	@Method({
-		path: "/config",
-		method: RequestMethod.GET,
-		middlewares: [ checkJwt ]
-	})
-	async getConfig(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
-		try {
-			// Get user
-			const user: User = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
-
-			// Delete specific fields
-			delete user.config.id;
-			delete user.config.created_at;
-			delete user.config.updated_at;
-
-			return ApiResSuccess({
-				title: "Sucesso na consulta",
-				message: "Configurações carregadas com sucesso.",
-			}, {
-				list: Object.keys(user.config).map(key => ({
-					config_name: key,
-					normalized_value: user.config[key]
-				}))
-			});
-		} catch (e) {
-			return ApiResError(1, {
-				title: "Erro na consulta",
-				message: "Não foi possível carregar as configurações, tente novamente mais tarde."
 			});
 		}
 	}
@@ -410,7 +363,7 @@ export class UserController {
 		path: "/check-availability/:username",
 		method: RequestMethod.GET
 	})
-	async checkAvailability(@HttpRequest() req, @PathVariable("username") username: string): Promise<any> {
+	async checkAvailability(@HttpRequest() req: Request, @HttpResponse() res: Response, @PathVariable("username") username: string): Promise<any> {
 		try {
 			username = username.trim().toLowerCase();	// Username must be lowercase
 
@@ -457,7 +410,9 @@ export class UserController {
 				message: "Não conseguimos realizar a consulta, tente novamente mais tarde."
 			});
 		}
-	}@Method({
+	}
+
+	@Method({
 		path: "/email-confirmation-resend",
 		method: RequestMethod.GET,
 		middlewares: [checkJwt]
@@ -627,32 +582,6 @@ export class UserController {
 	}
 
 	@Method({
-		path: "/profile-image/:username",
-		method: RequestMethod.GET,
-		errorCode: 404,
-		isFile: true
-	})
-	async profileImage(@HttpRequest() req, @PathVariable("username") username: string): Promise<any> {
-		try {
-			if (!username) {
-				return ApiResError(2, {
-					title: "Erro ao buscar imagem",
-					message: "Parâmetro de usuário não encontrado."
-				});
-			}
-
-			const user: User = await this.userRepo.findOneByOrFail({ username });
-			const profileImage: string = path.resolve(Config.path.uploads, `${user.avatar}`);
-			return profileImage;
-		} catch (e) {
-			return ApiResError(1, {
-				title: "Erro ao consulta",
-				message: "Usuário não encontrado."
-			});
-		}
-	}
-
-	@Method({
 		path: "/profile-image",
 		method: RequestMethod.PUT,
 		middlewares: [ checkJwt ]
@@ -718,6 +647,32 @@ export class UserController {
 	}
 
 	@Method({
+		path: "/profile-image/:username",
+		method: RequestMethod.GET,
+		errorCode: 404,
+		isFile: true
+	})
+	async profileImage(@HttpRequest() req: Request, @HttpResponse() res: Response, @PathVariable("username") username: string): Promise<any> {
+		try {
+			if (!username) {
+				return ApiResError(2, {
+					title: "Erro ao buscar imagem",
+					message: "Parâmetro de usuário não encontrado."
+				});
+			}
+
+			const user: User = await this.userRepo.findOneByOrFail({ username });
+			const profileImage: string = path.resolve(Config.path.uploads, `${user.avatar}`);
+			return profileImage;
+		} catch (e) {
+			return ApiResError(1, {
+				title: "Erro ao consulta",
+				message: "Usuário não encontrado."
+			});
+		}
+	}
+
+	@Method({
 		path: "/phone",
 		method: RequestMethod.PUT,
 		middlewares: [ checkJwt ]
@@ -729,6 +684,105 @@ export class UserController {
 			return ApiResError(1, {
 				title: "Erro na solicitação",
 				message: "Não foi possível alterar seu telefone, tente novamente mais tarde."
+			});
+		}
+	}
+
+	@Method({
+		path: "/request-password-recovery",
+		method: RequestMethod.POST
+	})
+	async requestPasswordRecovery(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
+		try {
+			const { email } = req.body;
+
+			if (!(email && email.trim())) {
+				return ApiResError(2, {
+					title: "Erro na solicitação",
+					message: "Parâmetros inválidos."
+				});
+			}
+
+			// Is valid email
+			if (!validator.isEmail(email)) {
+				return ApiResError(3, {
+					title: "Erro na solicitação",
+					message: "E-mail inválido."
+				});
+			}
+
+			// Get user
+			const user: User = await this.userRepo.findOneBy({ email });
+
+			// Check if user exists
+			if (!user) {
+				return ApiResError(4, {
+					title: "Erro na solicitação",
+					message: "E-mail não encontrado na base de dados."
+				});
+			}
+
+			// Check last request 30 minutes
+			const lastRequest: Date = user.password_last_email_at;
+			if (lastRequest && lastRequest.getTime() + ((30 * 60) * 1000) > new Date().getTime()) {
+				return ApiResError(5, {
+					title: "Erro na solicitação",
+					message: "Você deve esperar 30 minutos para solicitar outro e-mail de recuperação de senha."
+				});
+			}
+
+			// Generate token
+			const tokenReset: string = this.utilsHelper.randomCode(32);
+			const token: string = this.utilsHelper.createJWT({
+				id: user.id,
+				email: user.email,
+				type: "password-recovery",
+				token: tokenReset,
+				is2FA: user.two_factor.is_active
+			}, { expiresIn: "30m" });
+
+			// Send email
+			const mailService: MailService = new MailService(user.email, `${SystemParams.app.name} - Recuperação de senha`);
+			mailService.send("reset_password", {
+				token,
+				fullName: user.name
+			});
+
+			// Update user password last email at
+			user.password_token_reset = tokenReset;
+			user.password_last_email_at = new Date();
+			await this.userRepo.save(user);
+
+			return ApiResSuccess({
+				title: "Sucesso na solicitação",
+				message: "E-mail de recuperação de senha enviado com sucesso."
+			});
+		} catch (e) {
+			return ApiResError(1, {
+				title: "Erro na solicitação",
+				message: "Não foi possível solicitar a recuperação de senha, tente novamente mais tarde."
+			});
+		}
+	}
+
+	@Method({
+		path: "/password-recovery",
+		method: RequestMethod.POST,
+		middlewares: [ checkJwt, resetPassword ]
+	})
+	async passwordRecovery(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
+		try {
+			const {
+				password,
+				confirm_password,
+				code_2fa
+			} = req.body;
+
+			// if ()
+		} catch (e) {
+			return ApiResError(1, {
+				title: "Erro na solicitação",
+				message: "Não foi possível realizar a alteração de senha, tente novamente mais tarde."
 			});
 		}
 	}

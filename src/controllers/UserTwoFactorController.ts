@@ -5,8 +5,8 @@ import { Controller, HttpRequest, HttpResponse, Inject, InjectRepository, Method
 import { RequestMethod } from "../_core/enums/RequestMethod";
 import { Repository } from "typeorm";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
-import { checkJwt } from "../middlewares/checkJwt";
 import { Request, Response } from "express";
+import { check2FA, checkJwt } from "../middlewares";
 
 @Controller({
 	path: ["/user/two-factors"]
@@ -23,31 +23,30 @@ export class UserTwoFactorController {
 		middlewares: [ checkJwt ]
 	})
 	async getCode(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
-		const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
-		const userTwoFactor: UserTwoFactor = await this.userTwoFactor.findOne({
-			where: { user: { id: user.id } }
-		});
-
-		if (userTwoFactor.is_active) {
-			return ApiResError(1, {
-				title: "Erro na consulta",
-				message: "Código de 2FA já ativado."
-			});
-		}
-
 		try {
+			// Get user
+			const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
+
+			// Check if 2FA is active
+			if (user.two_factor.is_active) {
+				return ApiResError(1, {
+					title: "Erro na consulta",
+					message: "Código de 2FA já ativado."
+				});
+			}
+
 			// Geenerate code
 			const newSecret = this.utilsHelper.createTwoFactorToken(user);
 
 			// Update user with new secret
 			await this.userTwoFactor.save({
-				...userTwoFactor,
+				...user.two_factor,
 				secret: newSecret.secret
 			});
 
 			// Send code
 			return ApiResSuccess({
-				title: "Sucesso na consulta",
+				title: "Sucesso na solicitação",
 				message: "Código de 2FA gerado com sucesso.",
 			}, {
 				code: newSecret.secret,
@@ -57,7 +56,7 @@ export class UserTwoFactorController {
 		} catch (e) {
 			// Send error
 			return ApiResError(1, {
-				title: "Erro ao gerar código",
+				title: "Erro na solicitação",
 				message: "Erro ao gerar código de 2FA, tente novamente mais tarde."
 			});
 		}
@@ -69,40 +68,38 @@ export class UserTwoFactorController {
 		middlewares: [ checkJwt ]
 	})
 	async active(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
-		const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
-		const userTwoFactor: UserTwoFactor = await this.userTwoFactor.findOne({
-			where: { user: { id: user.id } }
-		});
-
 		try {
+			// Get user
+			const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
+
 			// Geenerate code
 			const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(
-				userTwoFactor.secret,
+				user.two_factor.secret,
 				req.body?.code_2fa || ""
 			);
 
 			if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
-				return ApiResError(1, {
-					title: "Erro na ativação",
+				return ApiResError(2, {
+					title: "Erro na solicitação",
 					message: "Código de 2FA inválido."
 				});
 			}
 
 			// Update user with new secret
 			await this.userTwoFactor.save({
-				...userTwoFactor,
+				...user.two_factor,
 				is_active: true
 			});
 
 			// Send code
 			return ApiResSuccess({
-				title: "Sucesso na ativação",
+				title: "Sucesso na solicitação",
 				message: "Código de 2FA ativado com sucesso.",
 			});
 		} catch (e) {
 			// Send error
 			return ApiResError(1, {
-				title: "Erro na ativação",
+				title: "Erro na solicitação",
 				message: "Erro ao ativar 2FA, tente novamente mais tarde."
 			});
 		}
@@ -111,31 +108,15 @@ export class UserTwoFactorController {
 	@Method({
 		path: "/disable",
 		method: RequestMethod.PUT,
-		middlewares: [ checkJwt ]
+		middlewares: [ checkJwt, check2FA ]
 	})
 	async disable(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
-		const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
-		const userTwoFactor: UserTwoFactor = await this.userTwoFactor.findOne({
-			where: { user: { id: user.id } }
-		});
-
 		try {
-			// Check code
-			const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(
-				userTwoFactor.secret,
-				req.body?.code_2fa || ""
-			);
-
-			if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
-				return ApiResError(1, {
-					title: "Erro na desativação",
-					message: "Código de 2FA inválido."
-				});
-			}
+			const user: User = await this.userRepo.findOneBy({ id: res.locals.jwtPayload.id });
 
 			// Update user with new secret
 			await this.userTwoFactor.save({
-				...userTwoFactor,
+				...user.two_factor,
 				is_active: false,
 				secret: null
 			});
@@ -147,7 +128,7 @@ export class UserTwoFactorController {
 			});
 		} catch (e) {
 			// Send error
-			return ApiResError(2, {
+			return ApiResError(1, {
 				title: "Erro na desativação",
 				message: "Erro ao desativar 2FA, tente novamente mais tarde."
 			});

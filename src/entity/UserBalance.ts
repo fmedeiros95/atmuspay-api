@@ -1,10 +1,10 @@
 import { Column, Entity, JoinColumn, OneToOne } from "typeorm";
-import { EntityBase } from "../_core/abstracts/EntityBase";
+import { EntityBase } from "../utils/EntityBase";
 import { User } from "./User";
 
 @Entity()
 export class UserBalance extends EntityBase {
-	@Column("bigint", { default: 0, transformer: {
+	@Column("bigint", { default: 500000, transformer: {
 		from: (value: string) => {
 			return parseInt(value);
 		},

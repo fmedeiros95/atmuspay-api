@@ -1,14 +1,17 @@
+import { Request, Response } from "express";
+import { Repository } from "typeorm";
+import { cpf } from "cpf-cnpj-validator";
+
+import { Controller, HttpRequest, HttpResponse, Inject, InjectRepository, Method } from "../_core/decorators";
+import { RequestMethod } from "../_core/enums/RequestMethod";
+
+import { UtilsHelper } from "../helpers/UtilsHelper";
+import { check2FA, checkJwt } from "../middlewares";
+import { ApiResError, ApiResSuccess } from "../utils/Response";
+
 import { Bank } from "../entity/Bank";
 import { User } from "../entity/User";
 import { UserAccountBank, UserAccountBankType } from "../entity/UserBankAccount";
-import { UtilsHelper } from "../helpers/UtilsHelper";
-import { Controller, HttpRequest, HttpResponse, Inject, InjectRepository, Method } from "../_core/decorators";
-import { RequestMethod } from "../_core/enums/RequestMethod";
-import { Repository } from "typeorm";
-import { ApiResError, ApiResSuccess } from "../utils/Response";
-import { cpf } from "cpf-cnpj-validator";
-import { checkJwt } from "../middlewares/checkJwt";
-import { Request, Response } from "express";
 
 
 @Controller({
@@ -24,36 +27,18 @@ export class UserAccountController {
 	@Method({
 		path: "/",
 		method: RequestMethod.POST,
-		middlewares: [ checkJwt ]
+		middlewares: [ checkJwt, check2FA ]
 	})
 	async create(@HttpRequest() req: Request, @HttpResponse() res: Response): Promise<any> {
 		try {
 			const {
-				bank_id, agency, account,
-				account_type, is_third, is_default,
-				code_2fa, document, name
+				bank_id, agency, account, name,
+				account_type, is_third, is_default, document
 			} = req.body;
-
-			// Get user
-			const user = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
-
-			// Check if the two factor is active
-			if (user.two_factor && user.two_factor.is_active) {
-				// Verify 2FA code
-				if (user.two_factor && user.two_factor.is_active) {
-					const checkTwoFactor: any = this.utilsHelper.checkTwoFactor(user.two_factor.secret, code_2fa || "");
-					if (!checkTwoFactor || checkTwoFactor.delta !== 0) {
-						return ApiResError(2, {
-							title: "Erro na solicitação",
-							message: "Código de 2FA inválido."
-						});
-					}
-				}
-			}
 
 			// Check agency length
 			if (agency.trim().length !== 4) {
-				return ApiResError(3, {
+				return ApiResError(2, {
 					title: "Erro na solicitação",
 					message: "Agência deve conter apenas 4 dígitos."
 				});
@@ -61,7 +46,7 @@ export class UserAccountController {
 
 			// Check account length
 			if (account.trim().length > 21) {
-				return ApiResError(4, {
+				return ApiResError(3, {
 					title: "Erro na solicitação",
 					message: "Conta deve conter no máximo 21 dígitos."
 				});
@@ -70,14 +55,14 @@ export class UserAccountController {
 			// validade account number
 			const accountNum = Number(account.slice(0, account.length - 2) + account.slice(account.length - 1));
 			if (typeof accountNum !== "number") {
-				return ApiResError(5, {
+				return ApiResError(4, {
 					title: "Erro na solicitação",
 					message: "O numero da conta informado é inválido."
 				});
 			}
 
 			if (!Object.values(UserAccountBankType).includes(account_type)) {
-				return ApiResError(6, {
+				return ApiResError(5, {
 					title: "Erro na solicitação",
 					message: "O tipo de conta informado é inválido."
 				});
@@ -86,7 +71,7 @@ export class UserAccountController {
 			// Is valid bank
 			const bank: Bank = await this.bankRepo.findOneBy({ id: bank_id });
 			if (!bank) {
-				return ApiResError(7, {
+				return ApiResError(6, {
 					title: "Erro na solicitação",
 					message: "O banco selecionado não existe."
 				});
@@ -111,6 +96,9 @@ export class UserAccountController {
 					});
 				}
 			}
+
+			// Get user
+			const user = await this.userRepo.findOneByOrFail({ id: res.locals.jwtPayload.id });
 
 			// Inser account to user
 			const userAccount = new UserAccountBank();

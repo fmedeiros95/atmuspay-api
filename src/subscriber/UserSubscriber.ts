@@ -10,50 +10,16 @@ import { SystemParams } from "../config";
 import { UserConfig } from "../entity/UserConfig";
 
 @EventSubscriber()
-export class UserSubscriber implements EntitySubscriberInterface {
+export class UserSubscriber implements EntitySubscriberInterface<User> {
 	listenTo() { return User; }
 
-	afterLoad(entity: User) {
-		// Has user address
-		const hasAddress = AppDataSource.manager.getRepository(UserAddress).count({
-			where: { user: { id: entity.id } }
-		});
-		if (!hasAddress) {
-			AppDataSource.manager.getRepository(UserAddress).save({ user: entity });
-		}
-
-		// Has user balance
-		const hasBalance = AppDataSource.manager.getRepository(UserBalance).count({
-			where: { user: { id: entity.id } }
-		});
-		if (!hasBalance) {
-			AppDataSource.manager.getRepository(UserBalance).save({ user: entity });
-		}
-
-		// Has user balance
-		const hasConfig = AppDataSource.manager.getRepository(UserConfig).count({
-			where: { user: { id: entity.id } }
-		});
-		if (!hasConfig) {
-			AppDataSource.manager.getRepository(UserConfig).save({ user: entity });
-		}
-
-		// Has user two factor
-		const hasTwoFactor = AppDataSource.manager.getRepository(UserTwoFactor).count({
-			where: { user: { id: entity.id } }
-		});
-		if (!hasTwoFactor) {
-			AppDataSource.manager.getRepository(UserTwoFactor).save({ user: entity });
-		}
-    }
-
-	afterInsert(event: InsertEvent<any>) {
+	afterInsert(event: InsertEvent<User>) {
 		// Instance of User
 		const user: User = event.entity;
 
 		// Send email confirmation code
-		const mail: MailService = new MailService(user.email.toLowerCase(), `${SystemParams.app.name} - Confirme seu e-mail`);
-		mail.send("email_confirm", Object.assign(user, {
+		const mailService: MailService = new MailService(user.email.toLowerCase(), `${SystemParams.app.name} - Confirme seu e-mail`);
+		mailService.send("email_confirm", Object.assign(user, {
 			code: user.email_code
 		}));
 
@@ -70,7 +36,7 @@ export class UserSubscriber implements EntitySubscriberInterface {
 		AppDataSource.manager.getRepository(UserTwoFactor).save({ user });
 	}
 
-	beforeRemove(event: RemoveEvent<any>) {
+	beforeRemove(event: RemoveEvent<User>) {
 		console.log(
 			`BEFORE ENTITY WITH ID ${event.entityId} REMOVED: `,
 			event.entity,
