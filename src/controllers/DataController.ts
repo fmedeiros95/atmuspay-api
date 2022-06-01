@@ -34,7 +34,7 @@ export class DataController {
 			}
 
 			return ApiResSuccess({
-				title: "Sucesso",
+				title: "Sucesso na consulta",
 				message: "CPF encontrado."
 			}, {
 				data: {
@@ -49,6 +49,34 @@ export class DataController {
 			return ApiResError(1, {
 				title: "Erro na consulta",
 				message: "Não foi possível consultar o CPF, tente novamente mais tarde."
+			});
+		}
+	}
+
+	@Method({
+		path: "/inquire-cnpj/:cnpj",
+		method: RequestMethod.GET
+	})
+	async inquireCnpj(@HttpRequest() req: Request, @HttpResponse() res: Response, @PathVariable("cnpj") cnpj: string): Promise<any> {
+		try {
+			const cnpjData: any = await this.serproHelper.getCnpjData(cnpj);
+			if (!cnpjData) {
+				return ApiResError(2, {
+					title: "Erro na consulta",
+					message: "O CNPJ informado não foi encontrado."
+				});
+			}
+
+			return ApiResSuccess({
+				title: "Sucesso na consulta",
+				message: "CNPJ encontrado."
+			}, {
+				data: { ...cnpjData }
+			});
+		} catch (error) {
+			return ApiResError(1, {
+				title: "Erro na consulta",
+				message: "Não foi possível consultar o CNPJ, tente novamente mais tarde."
 			});
 		}
 	}
