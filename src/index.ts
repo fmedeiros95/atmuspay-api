@@ -22,6 +22,7 @@ import { UserController } from "./controllers/UserController";
 // Helpers
 import { AsaasHelper } from "./helpers/AsaasHelper";
 import { HttpHelper } from "./helpers/HttpHelper";
+import { SerproHelper } from "./helpers/SerproHelper";
 import { TransactionHelper } from "./helpers/TransactionHelper";
 import { UserHelper } from "./helpers/UserHelper";
 import { UtilsHelper } from "./helpers/UtilsHelper";
@@ -51,6 +52,7 @@ import { Config, SystemParams } from "./config";
 	helpers: [
 		AsaasHelper,
 		HttpHelper,
+		SerproHelper,
 		TransactionHelper,
 		UserHelper,
 		UtilsHelper
