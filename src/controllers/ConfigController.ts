@@ -1,6 +1,6 @@
 import { Config } from "../entity/Config";
 import { checkJwt } from "../middlewares";
-import { Repository } from "typeorm";
+import { IsNull, Not, Repository } from "typeorm";
 import { ApiResError, ApiResSuccess } from "../utils/Response";
 import { Controller, InjectRepository, Method } from "../_core/decorators";
 import { RequestMethod } from "../_core/enums/RequestMethod";
@@ -19,7 +19,10 @@ export class ConfigController {
 	public async getConfig() {
 		try {
 			// Get default config
-			const config: Config = await this.configRepo.findOne({ order: { created_at: "ASC" } });
+			const config: Config = await this.configRepo.findOne({
+				where: { id: Not(IsNull()) },
+				order: { created_at: "ASC" }
+			});
 
 			// Delete specific fields
 			delete config.id;
@@ -36,6 +39,7 @@ export class ConfigController {
 				}))
 			});
 		} catch (e) {
+			console.log(e);
 			return ApiResError(1, {
 				title: "Erro na consulta",
 				message: "Não foi possível carregar as configurações, tente novamente mais tarde."

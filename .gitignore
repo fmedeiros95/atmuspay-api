@@ -41,16 +41,14 @@ yarn-error.log
 testem.log
 /typings
 
-# yarn and npm cache
-yarn.lock
-package-lock.json
-
 # System Files
 .DS_Store
 Thumbs.db
 
 # Others
 config.ts
-/src/uploads/*
-/src/uploads/validation/*
-/src/uploads/profile/*
+src/uploads/validation/*
+!src/uploads/validation/.gitkeep
+src/uploads/profile/*
+!src/uploads/profile/.gitkeep
+!src/uploads/profile/default.jpg
